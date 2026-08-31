@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#EBA1B4">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SODA">
+  <meta name="description" content="Sistem Otomasi Dokumen Bagian Umum Sekretariat Daerah Kabupaten Ngawi">
+
+  <title>SODA - Sistem Otomasi Dokumen yang Andal</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Apple Touch Icons (untuk iOS) -->
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+  <!-- Preload font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/style.css">
+
+  <!-- Animasi banner update -->
+  <style>
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);   opacity: 1; }
+    }
+    /* Loading screen saat pertama buka -->
+    #appLoadingScreen {
+      position: fixed; inset: 0; z-index: 999999;
+      background: linear-gradient(160deg, #F6CFD7 0%, #F3BAC9 50%, #EBA1B4 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+    }
+    #appLoadingScreen img {
+      width: 120px; height: 120px; border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(196,96,122,0.3);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1);    opacity: 1; }
+      50%       { transform: scale(1.05); opacity: 0.85; }
+    }
+    #appLoadingScreen p {
+      color: white; font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 600; letter-spacing: 0.5px;
+    }
+    .loading-dots span {
+      display: inline-block; width: 8px; height: 8px;
+      background: white; border-radius: 50%; margin: 0 3px;
+      animation: dotBounce 1.2s ease-in-out infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: translateY(0);   }
+      40%           { transform: translateY(-8px); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ LOADING SCREEN ═══ -->
+<div id="appLoadingScreen">
+  <img src="/icons/icon-192.png" alt="SODA" onerror="this.style.display='none'">
+  <p>SODA</p>
+  <div class="loading-dots">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- ═══ HALAMAN DAFTAR ═══ -->
+<div id="registerPage" style="display:none">
+  <div class="register-card">
+    <h2>Daftar Akun</h2>
+    <p class="subtitle">SODA — Bagian Umum Sekretariat Daerah Kabupaten Ngawi</p>
+    <div class="register-error"  id="registerError"></div>
+    <div class="register-success" id="registerSuccess"></div>
+    <label>Nama Lengkap</label>
+    <input type="text"     id="regNama"     placeholder="Nama lengkap Anda">
+    <label>Username</label>
+    <input type="text"     id="regUsername" placeholder="Buat username">
+    <label>Kata Sandi</label>
+    <input type="password" id="regPassword" placeholder="Buat kata sandi">
+    <label>Email</label>
+    <input type="email"    id="regEmail"    placeholder="Masukkan email untuk menerima konfirmasi">
+    <button class="btn-register" id="btnDaftar" onclick="doRegister()">Kirim Pengajuan</button>
+    <div class="link-login">Sudah punya akun? <a onclick="showLogin()">Masuk di sini</a></div>
+  </div>
+</div>
+
+<!-- ═══ HALAMAN LUPA KATA SANDI ═══ -->
+<div id="lupaPage" style="display:none">
+  <div class="lupa-card">
+    <h2>🔑 Lupa Kata Sandi</h2>
+    <p class="subtitle">Masukkan username dan email yang terdaftar, kata sandi akan dikirim via email.</p>
+    <div class="lupa-error"   id="lupaError"></div>
+    <div class="lupa-success" id="lupaSuccess"></div>
+    <label>Username</label>
+    <input type="text"  id="lupaUsername" placeholder="Username akun Anda">
+    <label>Email</label>
+    <input type="email" id="lupaEmail"    placeholder="Email yang terdaftar">
+    <button class="btn-lupa" id="btnLupa" onclick="doLupaPassword()">Kirim Kata Sandi</button>
+    <div class="link-login" style="margin-top:16px;">
+      <a onclick="showLogin()">← Kembali ke halaman masuk</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HALAMAN LOGIN ═══ -->
+<div id="loginPage" style="display:none">
+  <div class="login-card" id="loginCard">
+    <div class="login-logo-wrap">
+      <img id="loginLogo" class="login-logo"
+        src="/icons/icon-192.png" alt="SODA"
+        onerror="this.src='https://lh3.googleusercontent.com/d/1m9Gz-ENTp65ijBwUCl2dnMloDAqXGB8D'">
+    </div>
+    <div class="login-error" id="loginError">Nama pengguna atau kata sandi salah.</div>
+    <label>Nama Pengguna</label>
+    <input type="text" id="inputUsername" placeholder="Masukkan nama pengguna"
+      onkeydown="if(event.key==='Enter') document.getElementById('inputPassword').focus()">
+    <label>Kata Sandi</label>
+    <input type="password" id="inputPassword" placeholder="Masukkan kata sandi"
+      onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="btn-login" onclick="doLogin()">Masuk</button>
+    <div style="text-align:center;margin-top:10px;">
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:6px;">
+        <a onclick="showLupa()" style="color:#C4607A;font-weight:600;cursor:pointer;">Lupa kata sandi?</a>
+      </div>
+      <div style="font-size:12px;color:#9ca3af;">
+        Belum punya akun? <a onclick="showRegister()" style="color:#C4607A;font-weight:600;cursor:pointer;">Daftar di sini</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="appPage" style="display:none">
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="header-left">
+      <img src="/icons/icon-192.png" alt="SODA"
+        style="height:60px;width:60px;border-radius:12px;flex-shrink:0;object-fit:cover;"
+        onerror="this.style.display='none'">
+      <div>
+        <h1>SODA</h1>
+      </div>
+    </div>
+    <div class="header-right">
+      <button id="btnKembali" class="btn-kembali" onclick="showTab('dashboard')">
+        &#8592; Beranda
+      </button>
+      <div style="position:relative;">
+        <button onclick="toggleProfil()" class="btn-profil">
+          <span id="profilAvatar" class="profil-avatar-mini">?</span>
+          <span id="namaUserDisplay">Pengguna</span>
+          <span style="font-size:10px;opacity:0.7;">&#9660;</span>
+        </button>
+        <div class="profil-dropdown" id="profilDropdown">
+          <div class="profil-header">
+            <div class="profil-avatar" id="profilAvatarBesar">?</div>
+            <div class="profil-nama"     id="profilNamaDisplay">-</div>
+            <div class="profil-username" id="profilUsernameDisplay">-</div>
+          </div>
+          <div class="profil-body">
+            <div class="profil-item" onclick="showGantiSandi()">🔑 Ganti Kata Sandi</div>
+            <hr class="profil-divider">
+            <div class="profil-item danger" onclick="doLogout()">🚪 Keluar</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONTENT ── -->
+  <div class="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div id="tab-dashboard" style="display:none">
+      <div style="padding:8px 0 24px">
+        <p style="font-size:14px;color:#C4607A;font-weight:600;margin-bottom:4px;" id="salamWaktu"></p>
+        <h2 style="font-size:22px;font-weight:800;color:#111827;margin-bottom:6px;letter-spacing:-0.3px">Selamat datang di SODA</h2>
+        <p style="font-size:13px;color:#9ca3af;font-weight:500;">Silakan pilih menu di bawah ini</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:32px">
+        <button id="cardMasuk" onclick="showTab('masuk')" style="background:white;border:1.5px solid #f3c6d4;border-radius:16px;padding:24px;text-align:left;cursor:pointer;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 2px 8px rgba(196,96,122,0.07);min-height:160px;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 28px rgba(196,96,122,0.18)';this.style.borderColor='#EBA1B4'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(196,96,122,0.07)';this.style.borderColor='#f3c6d4'">
+          <div style="width:52px;height:52px;border-radius:12px;background:#FDF0F3;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:14px">📥</div>
+          <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px">Surat Masuk</div>
+          <div style="font-size:12px;color:#9ca3af;line-height:1.5;margin-bottom:10px">Registrasi dan kelola daftar surat masuk di bagian umum Sekretariat Daerah Kabupaten Ngawi.</div>
+          <div style="font-size:13px;font-weight:700;color:#C4607A;background:#FDF0F3;display:inline-block;padding:3px 10px;border-radius:20px;" id="statMasuk">...</div>
+        </button>
+        <button id="cardKeluar" onclick="showTab('keluar')" style="background:white;border:1.5px solid #c7d2fe;border-radius:16px;padding:24px;text-align:left;cursor:pointer;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 2px 8px rgba(99,102,241,0.07);min-height:160px;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 28px rgba(99,102,241,0.18)';this.style.borderColor='#a5b4fc'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(99,102,241,0.07)';this.style.borderColor='#c7d2fe'">
+          <div style="width:52px;height:52px;border-radius:12px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:14px">📤</div>
+          <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px">Surat Keluar</div>
+          <div style="font-size:12px;color:#9ca3af;line-height:1.5;margin-bottom:10px">Buat nomor surat keluar secara otomatis dan arsipkan surat keluar berdasarkan klasifikasi yang ada.</div>
+          <div style="font-size:13px;font-weight:700;color:#6366f1;background:#eef2ff;display:inline-block;padding:3px 10px;border-radius:20px;" id="statKeluar">...</div>
+        </button>
+        <button id="cardSPPD" onclick="showTab('sppd')" style="background:white;border:1.5px solid #a7f3d0;border-radius:16px;padding:24px;text-align:left;cursor:pointer;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 2px 8px rgba(16,185,129,0.07);min-height:160px;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 28px rgba(16,185,129,0.18)';this.style.borderColor='#6ee7b7'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(16,185,129,0.07)';this.style.borderColor='#a7f3d0'">
+          <div style="width:52px;height:52px;border-radius:12px;background:#ecfdf5;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:14px">🗺️</div>
+          <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px">SPPD</div>
+          <div style="font-size:12px;color:#9ca3af;line-height:1.5;margin-bottom:10px">Input dan kelola Surat Perintah Perjalanan Dinas dengan penomoran otomatis.</div>
+          <div style="font-size:13px;font-weight:700;color:#059669;background:#ecfdf5;display:inline-block;padding:3px 10px;border-radius:20px;" id="statSPPD">...</div>
+        </button>
+        <button id="cardASKI" onclick="showTab('aski')" style="background:white;border:1.5px solid #fde68a;border-radius:16px;padding:24px;text-align:left;cursor:pointer;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 2px 8px rgba(245,158,11,0.07);min-height:160px;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 10px 28px rgba(245,158,11,0.18)';this.style.borderColor='#fcd34d'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(245,158,11,0.07)';this.style.borderColor='#fde68a'">
+          <div style="width:52px;height:52px;border-radius:12px;background:#fffbeb;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:14px">🗂️</div>
+          <div style="font-size:15px;font-weight:700;color:#111827;margin-bottom:4px">ASKI</div>
+          <div style="font-size:12px;color:#9ca3af;line-height:1.5;margin-bottom:10px">Audit Sistem Kearsipan Internal</div>
+          <div style="font-size:13px;font-weight:700;color:#d97706;background:#fffbeb;display:inline-block;padding:3px 10px;border-radius:20px;" id="statASKI">...</div>
+        </button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+        <div style="background:linear-gradient(135deg,#fff5f7,#fce8ee);border-radius:12px;padding:14px 16px;border:1px solid #f9c8d9;">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Kalender Hari Ini</div>
+          <div style="font-size:15px;font-weight:700;color:#111827" id="dashDate">—</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#f0f4ff,#e8edff);border-radius:12px;padding:14px 16px;border:1px solid #c7d2fe;">
+          <div style="font-size:11px;color:#818cf8;margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px">Versi</div>
+          <div style="font-size:15px;font-weight:700;color:#111827">V.2026.01</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:12px;padding:14px 16px;border:1px solid #a7f3d0;">
+          <div style="font-size:11px;color:#10b981;margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px">Unit</div>
+          <div style="font-size:13px;font-weight:700;color:#111827">Bagian Umum Sekretariat Daerah Kabupaten Ngawi</div>
+        </div>
+      </div>
+    </div><!-- /tab-dashboard -->
+
+    <!-- ══ SURAT MASUK ══ -->
+    <div id="tab-masuk">
+      <div class="sppd-actions">
+        <button type="button" class="btn-secondary active" id="btnMasukForm" onclick="showMasukMode('form')">REGISTRASI SURAT MASUK BARU</button>
+        <button type="button" class="btn-secondary" id="btnMasukDaftar" onclick="showMasukMode('daftar')">DAFTAR SURAT MASUK</button>
+      </div>
+      <div id="masukFormPanel">
+        <div class="card">
+          <h2>Form Registrasi Surat Masuk Baru</h2>
+          <div class="form-row-3">
+            <div class="form-group">
+              <label>Tanggal Input Surat</label>
+              <input type="text" id="mTanggalInput" readonly style="background:#f9fafb;color:#6b7280;cursor:default;">
+            </div>
+            <div class="form-group">
+              <label>No Agenda</label>
+              <div class="agenda-preview" id="mNoAgendaPreview">Memuat...</div>
+            </div>
+            <div class="form-group">
+              <label>Nomor Surat</label>
+              <input type="text" id="mNomorSurat" placeholder="Contoh: 005/123/2026">
+            </div>
+          </div>
+          <hr class="form-divider">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Klasifikasi Surat</label>
+              <div class="dropdown-wrap">
+                <input type="text" class="dropdown-input" id="mSearchKlasifikasi"
+                  placeholder="Ketik untuk mencari klasifikasi surat..." autocomplete="off"
+                  oninput="mFilterKlasifikasi()" onfocus="mShowDropdown()" onblur="mHideDropdown()">
+                <div class="dropdown-list" id="mDropdownList"></div>
+              </div>
+            </div>
+            <div class="form-group"></div>
+          </div>
+          <div class="form-row" style="margin-top:-8px">
+            <div class="form-group full">
+              <label>Perihal</label>
+              <textarea class="uraian" id="mUraian" placeholder="Tuliskan perihal surat di sini..." rows="3"></textarea>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group full">
+              <label>Catatan</label>
+              <textarea class="uraian" id="mCatatan" placeholder="Silakan menulis catatan di sini apabila diperlukan..." rows="3"></textarea>
+            </div>
+          </div>
+          <hr class="form-divider">
+          <div class="form-row-3">
+            <div class="form-group">
+              <label>Tanggal Surat</label>
+              <div class="date-field">
+                <input type="text" id="mTanggalSurat" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)">
+                <button type="button" class="date-pick-btn" onclick="openTanggalPicker('mTanggalSurat')">&#128197;</button>
+                <input type="date" id="mTanggalSuratPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('mTanggalSurat')" onfocus="syncTanggalPicker('mTanggalSurat')" onchange="setTanggalDariPicker('mTanggalSurat', this.value)">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tanggal Terima</label>
+              <div class="date-field">
+                <input type="text" id="mTanggalTerima" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)">
+                <button type="button" class="date-pick-btn" onclick="openTanggalPicker('mTanggalTerima')">&#128197;</button>
+                <input type="date" id="mTanggalTerimaPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('mTanggalTerima')" onfocus="syncTanggalPicker('mTanggalTerima')" onchange="setTanggalDariPicker('mTanggalTerima', this.value)">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tanggal Turun</label>
+              <div class="date-field">
+                <input type="text" id="mTanggalTurun" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)">
+                <button type="button" class="date-pick-btn" onclick="openTanggalPicker('mTanggalTurun')">&#128197;</button>
+                <input type="date" id="mTanggalTurunPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('mTanggalTurun')" onfocus="syncTanggalPicker('mTanggalTurun')" onchange="setTanggalDariPicker('mTanggalTurun', this.value)">
+              </div>
+            </div>
+          </div>
+          <hr class="form-divider">
+          <div class="form-row-3">
+            <div class="form-group">
+              <label>Disposisi Ke</label>
+              <div class="disposisi-wrap">
+                <div class="disposisi-display" id="disposisiDisplay" tabindex="0" onclick="toggleDisposisiDropdown()" onkeydown="if(event.key==='Enter'||event.key===' ')toggleDisposisiDropdown()">
+                  <span class="disposisi-placeholder" id="disposisiPlaceholder">Pilih disposisi...</span>
+                </div>
+                <div class="disposisi-dropdown" id="disposisiDropdown">
+                  <div class="disposisi-search-row"><input type="text" id="disposisiSearchInput" placeholder="🔍 Ketik nama untuk cari..." oninput="filterDisposisiOptions()" onkeydown="event.stopPropagation()"></div>
+                  <div class="disposisi-options-list" id="disposisiOptions"></div>
+                  <div class="disposisi-add-row"><input type="text" id="disposisiNewInput" placeholder="+ Tambah disposisi baru..." onkeydown="if(event.key==='Enter') submitTambahDisposisi(); event.stopPropagation();"><button onclick="submitTambahDisposisi()">Tambah</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Pengirim</label>
+              <input type="text" id="mPengirim" placeholder="Nama instansi / pengirim">
+            </div>
+            <div class="form-group">
+              <label>Penerima</label>
+              <input type="text" id="mPenerima" placeholder="Nama penerima surat">
+            </div>
+          </div>
+          <hr class="form-divider">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Unggah Pindaian Surat (PDF/Word)</label>
+              <input type="file" id="mInputDokumen" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none" onchange="mHandleFileSelect(event)">
+              <div class="upload-box" id="mUploadBox" onclick="document.getElementById('mInputDokumen').click()">
+                <div class="plus">+</div><div class="upload-text">Tambah</div><div class="file-hint file-hint-def">PDF / Word</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Unggah Lampiran <span style="color:#9ca3af;font-size:10px;font-weight:400;text-transform:none;">(opsional, bisa lebih dari 1)</span></label>
+              <input type="file" id="mInputLampiran" accept=".pdf,.doc,.docx,.xlsx,.xls" multiple style="display:none" onchange="mHandleLampiranSelect(event)">
+              <div id="lampiranMasukList" style="display:flex;flex-direction:column;gap:6px;"></div>
+              <div class="upload-box" id="mUploadLampiranBox" onclick="document.getElementById('mInputLampiran').click()" style="margin-top:6px;">
+                <div class="plus">+</div><div class="upload-text">Tambah Lampiran</div><div class="file-hint file-hint-def">PDF / Word / Excel</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group full" style="justify-content:flex-end;">
+              <button class="btn-primary" onclick="simpanMasuk()" id="btnSimpanMasuk" style="align-self:flex-end;margin-top:auto;">Simpan Surat Masuk</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="masukDaftarPanel" style="display:none">
+        <div class="card" style="padding:0">
+          <div class="table-toolbar">
+            <div style="font-size:13px;color:#6b7280;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              Tampilkan baris:
+              <select id="mRowsPerPage" onchange="mUbahRowsPerPage()">
+                <option value="5" selected>5</option><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="-1">Semua</option>
+              </select>
+              Tahun Input:
+              <select id="mFilterTahun" onchange="mFilterTable()"><option value="">Semua</option></select>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button type="button" class="btn-secondary no-print" id="btnToggleTglMasuk" onclick="toggleTglInputMasuk()" style="padding:7px 14px;font-size:12px;">👁 Tgl Input</button>
+              <button type="button" class="btn-secondary no-print" onclick="generatePdfMasuk()" style="padding:7px 14px;font-size:12px;">🖨️ PDF</button>
+              <div id="mPaginationInfo" style="font-size:13px;color:#9ca3af;font-weight:500;"></div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table-masuk">
+              <colgroup>
+                <col style="width:40px"><col style="width:110px"><col style="width:95px"><col style="width:150px"><col style="width:160px"><col style="width:230px"><col style="width:210px"><col style="width:110px"><col style="width:110px"><col style="width:110px"><col style="width:150px"><col style="width:120px"><col style="width:120px"><col style="width:120px"><col style="width:100px"><col style="width:100px"><col style="width:60px"><col style="width:60px">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>No</th><th class="col-tgl-input">Tgl Input</th><th>No Agenda</th><th>Nomor Surat</th><th>Klasifikasi</th><th>Perihal</th><th>Catatan</th><th>Tgl Surat</th><th>Tgl Terima</th><th>Tgl Turun</th><th>Disposisi</th><th>Pengirim</th><th>Penerima</th><th>Pindaian</th><th>Lampiran</th><th>Edit</th><th>Hapus</th>
+                </tr>
+                <tr class="filter-row">
+                  <td></td>
+                  <td class="col-tgl-input">
+                    <div style="display:flex;gap:2px;align-items:center;">
+                      <div class="date-field">
+                        <input type="text" id="mfTglInput" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this); mFilterTable()" style="min-width:0;font-size:10px;padding:4px 3px;">
+                        <button type="button" class="date-pick-btn" onclick="openTanggalPicker('mfTglInput')">&#128197;</button>
+                        <input type="date" id="mfTglInputPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('mfTglInput')" onfocus="syncTanggalPicker('mfTglInput')" onchange="setTanggalDariPicker('mfTglInput', this.value); mFilterTable()">
+                      </div>
+                      <button type="button" class="pagination-btn sort-btn" onclick="mToggleSort()" title="Sort">↕</button>
+                    </div>
+                  </td>
+                  <td><input type="text" id="mfAgenda"      placeholder="Cari..." oninput="mFilterTable()"></td>
+                  <td><input type="text" id="mfNomorSurat"  placeholder="Cari..." oninput="mFilterTable()"></td>
+                  <td><input type="text" id="mfKlasifikasi" placeholder="Cari..." oninput="mFilterTable()"></td>
+                  <td><input type="text" id="mfUraian"      placeholder="Cari..." oninput="mFilterTable()"></td>
+                  <td><input type="text" id="mfCatatan"     placeholder="Cari..." oninput="mFilterTable()"></td>
+                  <td></td><td></td><td></td>
+                  <td><input type="text" id="mfDisposisi"   placeholder="Cari..." oninput="mFilterTable()"></td>
+                  <td><input type="text" id="mfPengirim"    placeholder="Cari..." oninput="mFilterTable()"></td>
+                  <td><input type="text" id="mfPenerima"    placeholder="Cari..." oninput="mFilterTable()"></td>
+                  <td></td><td></td><td></td><td></td>
+                </tr>
+              </thead>
+              <tbody id="mTableBody"><tr><td colspan="16" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pagination-wrap" id="mPaginationControls"></div>
+        </div>
+      </div>
+    </div><!-- /tab-masuk -->
+
+    <!-- ══ SURAT KELUAR ══ -->
+    <div id="tab-keluar" style="display:none">
+      <div class="sppd-actions">
+        <button type="button" class="btn-secondary active" id="btnKeluarForm" onclick="showKeluarMode('form')">REGISTRASI SURAT KELUAR BARU</button>
+        <button type="button" class="btn-secondary" id="btnKeluarDaftar" onclick="showKeluarMode('daftar')">DAFTAR SURAT KELUAR</button>
+      </div>
+      <div id="keluarFormPanel">
+        <div class="card">
+          <h2>Form Registrasi Surat Keluar Baru</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tanggal Surat</label>
+              <div class="date-field">
+                <input type="text" id="inputTanggal" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)" onchange="refreshNomorJikaSudahPilihKlasifikasi()">
+                <button type="button" class="date-pick-btn" onclick="openTanggalPicker('inputTanggal')">&#128197;</button>
+                <input type="date" id="inputTanggalPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('inputTanggal')" onfocus="syncTanggalPicker('inputTanggal')" onchange="setTanggalDariPicker('inputTanggal', this.value); refreshNomorJikaSudahPilihKlasifikasi()">
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Klasifikasi Surat</label>
+              <div class="dropdown-wrap">
+                <input type="text" class="dropdown-input" id="searchKlasifikasi" placeholder="Ketik untuk mencari klasifikasi surat..." autocomplete="off" oninput="filterKlasifikasi()" onfocus="showDropdown()" onblur="hideDropdown()">
+                <div class="dropdown-list" id="dropdownList"></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Nomor Naskah</label>
+              <div class="nomor-preview" id="nomorPreview">— Pilih klasifikasi terlebih dahulu —</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group full">
+              <label>Perihal Surat</label>
+              <textarea class="uraian" id="inputHal" placeholder="Contoh: Undangan Rapat Koordinasi" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Pembuat Surat</label>
+              <div class="disposisi-wrap" id="pembuatWrap">
+                <div class="disposisi-display" id="pembuatDisplay" tabindex="0" onclick="togglePembuatDropdown()" onkeydown="if(event.key==='Enter'||event.key===' ')togglePembuatDropdown()">
+                  <span class="disposisi-placeholder" id="pembuatPlaceholder">Pilih pembuat surat...</span>
+                </div>
+                <div class="disposisi-dropdown" id="pembuatDropdown">
+                  <div class="disposisi-search-row"><input type="text" id="pembuatSearchInput" placeholder="🔍 Ketik nama untuk cari..." oninput="filterPembuatOptions()" onkeydown="event.stopPropagation()"></div>
+                  <div class="disposisi-options-list" id="pembuatOptions"></div>
+                  <div class="disposisi-add-row"><input type="text" id="pembuatNewInput" placeholder="+ Tambah pembuat baru..." onkeydown="if(event.key==='Enter') submitTambahPembuat(); event.stopPropagation();"><button onclick="submitTambahPembuat()">Tambah</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tujuan Surat</label>
+              <div class="disposisi-wrap" id="tujuanWrap">
+                <div class="disposisi-display" id="tujuanDisplay" tabindex="0" onclick="toggleTujuanDropdown()" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTujuanDropdown()">
+                  <span class="disposisi-placeholder" id="tujuanPlaceholder">Pilih atau ketik tujuan surat...</span>
+                </div>
+                <div class="disposisi-dropdown" id="tujuanDropdown">
+                  <div class="disposisi-search-row"><input type="text" id="tujuanSearchInput" placeholder="🔍 Ketik nama untuk cari..." oninput="filterTujuanOptions()" onkeydown="event.stopPropagation()"></div>
+                  <div class="disposisi-options-list" id="tujuanOptions"></div>
+                  <div class="disposisi-add-row"><input type="text" id="tujuanNewInput" placeholder="+ Tambahkan yang lain..." onkeydown="if(event.key==='Enter') submitTambahTujuan(); event.stopPropagation();"><button onclick="submitTambahTujuan()">Tambah</button></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Unggah Surat (Word/PDF)</label>
+              <input type="file" id="inputDokumen" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none" onchange="handleFileSelect(event)">
+              <div class="upload-box" id="uploadBox" onclick="document.getElementById('inputDokumen').click()">
+                <div class="plus">+</div><div class="upload-text">Tambah</div><div class="file-hint file-hint-def">PDF / Word</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Unggah Lampiran <span style="color:#9ca3af;font-size:10px;font-weight:400;text-transform:none;">(opsional, bisa lebih dari 1)</span></label>
+              <input type="file" id="inputLampiranKeluar" accept=".pdf,.doc,.docx,.xlsx,.xls" multiple style="display:none" onchange="handleLampiranKeluarSelect(event)">
+              <div id="lampiranKeluarList" style="display:flex;flex-direction:column;gap:6px;"></div>
+              <div class="upload-box" id="uploadLampiranKeluarBox" onclick="document.getElementById('inputLampiranKeluar').click()" style="margin-top:6px;">
+                <div class="plus">+</div><div class="upload-text">Tambah Lampiran</div><div class="file-hint file-hint-def">PDF / Word / Excel</div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="simpanKeluar()" id="btnSimpan">Simpan Surat Keluar</button>
+        </div>
+      </div>
+      <div id="keluarDaftarPanel" style="display:none">
+        <div class="card" style="padding:0">
+          <div class="table-toolbar">
+            <div style="font-size:13px;color:#6b7280;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              Tampilkan baris:
+              <select id="rowsPerPageSelect" onchange="ubahRowsPerPage()">
+                <option value="5" selected>5</option><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="-1">Semua</option>
+              </select>
+              Tahun Input:
+              <select id="kFilterTahun" onchange="filterTable()"><option value="">Semua</option></select>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button type="button" class="btn-secondary no-print" onclick="generatePdfKeluar()" style="padding:7px 14px;font-size:12px;">🖨️ PDF</button>
+              <div id="paginationInfo" style="font-size:13px;color:#9ca3af;font-weight:500;"></div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table-keluar">
+              <colgroup>
+                <col style="width:45px"><col style="width:95px"><col style="width:240px"><col style="width:240px"><col style="width:130px"><col style="width:130px"><col style="width:100px"><col style="width:100px"><col style="width:60px"><col style="width:60px">
+              </colgroup>
+              <thead>
+                <tr><th>No</th><th>Tanggal</th><th>Nomor Surat</th><th>Perihal</th><th>Pembuat</th><th>Tujuan</th><th>Dokumen</th><th>Lampiran</th><th>Edit</th><th>Hapus</th></tr>
+                <tr class="filter-row">
+                  <td></td>
+                  <td>
+                    <div style="display:flex;gap:2px;align-items:center;">
+                      <div class="date-field">
+                        <input type="text" id="fTanggal" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this); filterTable()" style="min-width:0;font-size:10px;padding:4px 3px;">
+                        <button type="button" class="date-pick-btn" onclick="openTanggalPicker('fTanggal')">&#128197;</button>
+                        <input type="date" id="fTanggalPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('fTanggal')" onfocus="syncTanggalPicker('fTanggal')" onchange="setTanggalDariPicker('fTanggal', this.value); filterTable()">
+                      </div>
+                      <button type="button" class="pagination-btn sort-btn" onclick="toggleSortTanggal()" title="Sort">↕</button>
+                    </div>
+                  </td>
+                  <td><input type="text" id="fNomor"   placeholder="Cari Nomor..."   oninput="filterTable()"></td>
+                  <td><input type="text" id="fPerihal" placeholder="Cari Perihal..."  oninput="filterTable()"></td>
+                  <td><input type="text" id="fPembuat" placeholder="Cari Pembuat..."  oninput="filterTable()"></td>
+                  <td><input type="text" id="fTujuan"  placeholder="Cari Tujuan..."   oninput="filterTable()"></td>
+                  <td></td><td></td><td></td>
+                </tr>
+              </thead>
+              <tbody id="tableBody"><tr><td colspan="9" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pagination-wrap" id="paginationControls"></div>
+        </div>
+      </div>
+    </div><!-- /tab-keluar -->
+
+    <!-- ══ SPPD ══ -->
+    <div id="tab-sppd" style="display:none">
+      <div class="card">
+        <h2>PENULISAN SPPD MANUAL</h2>
+        <div class="sppd-actions">
+          <button type="button" class="btn-secondary active" id="btnModeInputSPPD" onclick="showSPPDMode('input')">INPUT DATA SPPD</button>
+          <button type="button" class="btn-secondary" id="btnModeDaftarSPPD" onclick="showSPPDMode('daftar')">DAFTAR DATA MANUAL SPPD</button>
+        </div>
+        <div id="sppdInputPanel">
+          <hr style="border:none;border-top:1.5px solid #F3BAC9;margin:18px 0;">
+          <div class="form-row">
+            <div class="form-group"><label>Nama</label><input type="text" id="sppdNama" placeholder="Ketik nama penginput data..."></div>
+            <div class="form-group">
+              <label>Tanggal</label>
+              <div class="date-field">
+                <input type="text" id="sppdTanggal" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)" onchange="refreshSPPDNumbers(true)">
+                <button type="button" class="date-pick-btn" onclick="openTanggalPicker('sppdTanggal')">&#128197;</button>
+                <input type="date" id="sppdTanggalPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('sppdTanggal')" onfocus="syncTanggalPicker('sppdTanggal')" onchange="setTanggalDariPicker('sppdTanggal', this.value); refreshSPPDNumbers(true)">
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Pemohon</label>
+              <div class="disposisi-wrap" id="sppdPemohonWrap">
+                <div class="disposisi-display" id="sppdPemohonDisplay" onclick="togglePemohonSPPD()"><span class="disposisi-placeholder">Pilih pemohon...</span></div>
+                <div class="disposisi-dropdown" id="sppdPemohonDropdown">
+                  <div class="disposisi-search-row"><input type="text" id="sppdPemohonSearch" placeholder="🔍 Ketik nama untuk cari..." oninput="renderPemohonSPPD()"></div>
+                  <div class="disposisi-options-list" id="sppdPemohonOptions"></div>
+                  <div class="disposisi-show-more" id="sppdPemohonShowMore" onclick="showMorePemohonSPPD()">Tampilkan 5 lagi</div>
+                  <div class="disposisi-add-row"><input type="text" id="sppdPemohonBaru" placeholder="+ Tambah pemohon baru..."><button type="button" onclick="tambahPemohonSPPDBaru()">Tambah</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group"><label>Jumlah Hari</label><input type="text" id="sppdJumlahHari" placeholder="Ketik jumlah hari"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>No. Registrasi</label><textarea id="sppdNoRegistrasi" class="uraian input-readonly sppd-preview-number" placeholder="Pilih Pemohon terlebih dahulu..." readonly rows="1"></textarea></div>
+            <div class="form-group"><label>Nomor</label><textarea id="sppdNomor" class="uraian input-readonly sppd-preview-number" placeholder="Akan terisi otomatis..." readonly rows="1"></textarea></div>
+          </div>
+          <div class="form-row"><div class="form-group full"><label>Tujuan Perjalanan Dinas</label><input type="text" id="sppdTujuan" placeholder="Ketik tempat tujuan perjalanan dinas..."></div></div>
+          <div class="form-row"><div class="form-group full"><label>Keterangan Lain-Lain</label><textarea class="uraian" id="sppdKeterangan" placeholder="Tulis Keterangan tambahan apabila ada..." rows="3"></textarea></div></div>
+          <button class="btn-primary" onclick="simpanDataSPPD()" id="btnSimpanSPPD">Simpan</button>
+        </div>
+      </div>
+      <div class="card" id="sppdDaftarPanel" style="display:none;padding:0">
+        <div class="table-toolbar">
+          <div style="font-size:13px;color:#6b7280;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            Tampilkan baris:
+            <select id="sppdRowsPerPage" onchange="sppdUbahRowsPerPage()">
+              <option value="5" selected>5</option><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="-1">Semua</option>
+            </select>
+            Tahun Input:
+            <select id="sppdFilterTahun" onchange="sppdFilterTable()"><option value="">Semua</option></select>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" class="btn-secondary no-print" onclick="generatePdfSPPD()" style="padding:7px 14px;font-size:12px;">🖨️ PDF</button>
+            <div id="sppdPaginationInfo" style="font-size:13px;color:#9ca3af;font-weight:500;"></div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="table-sppd">
+            <colgroup><col style="width:44px"><col style="width:110px"><col style="width:130px"><col style="width:95px"><col style="width:135px"><col style="width:135px"><col style="width:210px"><col style="width:90px"><col style="width:180px"><col style="width:64px"><col style="width:64px"></colgroup>
+            <thead>
+              <tr><th>No</th><th>Tanggal</th><th>No. Registrasi</th><th>Nomor</th><th>Nama</th><th>Pemohon</th><th>Tujuan Perjalanan Dinas</th><th>Jumlah Hari</th><th>Keterangan</th><th>Edit</th><th>Hapus</th></tr>
+              <tr class="filter-row">
+                <td></td>
+                <td>
+                  <div style="display:flex;gap:2px;align-items:center;">
+                    <div class="date-field">
+                      <input type="text" id="sppdFTanggal" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this); sppdFilterTable()" style="min-width:0;font-size:10px;padding:4px 3px;">
+                      <button type="button" class="date-pick-btn" onclick="openTanggalPicker('sppdFTanggal')">&#128197;</button>
+                      <input type="date" id="sppdFTanggalPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('sppdFTanggal')" onfocus="syncTanggalPicker('sppdFTanggal')" onchange="setTanggalDariPicker('sppdFTanggal', this.value); sppdFilterTable()">
+                    </div>
+                    <button type="button" class="pagination-btn sort-btn" onclick="sppdToggleSort()">&#8597;</button>
+                  </div>
+                </td>
+                <td><input type="text" id="sppdFNoReg"      placeholder="Cari..." oninput="sppdFilterTable()"></td>
+                <td><input type="text" id="sppdFNomor"      placeholder="Cari..." oninput="sppdFilterTable()"></td>
+                <td><input type="text" id="sppdFNama"       placeholder="Cari..." oninput="sppdFilterTable()"></td>
+                <td><input type="text" id="sppdFPemohon"    placeholder="Cari..." oninput="sppdFilterTable()"></td>
+                <td><input type="text" id="sppdFTujuan"     placeholder="Cari..." oninput="sppdFilterTable()"></td>
+                <td></td>
+                <td><input type="text" id="sppdFKeterangan" placeholder="Cari..." oninput="sppdFilterTable()"></td>
+                <td></td><td></td>
+              </tr>
+            </thead>
+            <tbody id="sppdTableBody"><tr><td colspan="11" class="empty-state">Memuat data...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination-wrap" id="sppdPaginationControls"></div>
+      </div>
+    </div><!-- /tab-sppd -->
+
+    <!-- ══ ASKI ══ -->
+    <div id="tab-aski" style="display:none">
+      <div style="background:white;border:1px solid #F3BAC9;border-radius:14px;padding:18px 24px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">
+        <div style="background:#FDF0F3;border:1px solid #F3BAC9;border-radius:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;">🗂️</div>
+        <div style="flex:1;"><div style="font-size:17px;font-weight:800;color:#C4607A;">ASKI</div><div style="font-size:12px;color:#9ca3af;font-weight:500;margin-top:1px;">Audit Sistem Kearsipan Internal</div></div>
+        <div style="font-size:11px;font-weight:700;color:#C4607A;background:white;border:1px solid #F3BAC9;padding:5px 14px;border-radius:20px;white-space:nowrap;">Bagian Umum Setda Kab. Ngawi</div>
+      </div>
+      <div class="aski-submenu">
+        <button type="button" class="aski-sub-btn active" id="btnAskiPinjam" onclick="showAskiMenu('pinjam')">📦 Pinjam Arsip</button>
+        <button type="button" class="aski-sub-btn" id="btnAskiAlih" onclick="showAskiMenu('alih')">🔄 Alih Media</button>
+      </div>
+
+      <!-- Pinjam Arsip -->
+      <div id="askiPinjamPanel">
+        <div class="sppd-actions">
+          <button type="button" class="btn-secondary active" id="btnPinjamForm" onclick="showPinjamMode('form')">FORM PENGISIAN</button>
+          <button type="button" class="btn-secondary" id="btnPinjamDaftar" onclick="showPinjamMode('daftar')">DAFTAR PINJAM ARSIP</button>
+        </div>
+        <div class="card" id="pinjamFormPanel">
+          <h2>Form Pengisian Pinjam Arsip</h2>
+          <div class="form-row" style="margin-bottom:10px;">
+            <div class="form-group full">
+              <label>Sumber Arsip</label>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;text-transform:none;font-weight:500;"><input type="radio" name="sumberArsip" id="radioSODAMasuk" value="SODA-Masuk" onchange="onSumberArsipChange()" style="accent-color:#EBA1B4;width:16px;height:16px;cursor:pointer;" checked><span>📂 SODA - Daftar Surat Masuk</span></label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;text-transform:none;font-weight:500;"><input type="radio" name="sumberArsip" id="radioSODAKeluar" value="SODA-Keluar" onchange="onSumberArsipChange()" style="accent-color:#EBA1B4;width:16px;height:16px;cursor:pointer;"><span>📋 SODA - Daftar Surat Keluar</span></label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#374151;text-transform:none;font-weight:500;"><input type="radio" name="sumberArsip" id="radioSrikandi" value="Srikandi" onchange="onSumberArsipChange()" style="accent-color:#EBA1B4;width:16px;height:16px;cursor:pointer;"><span>📝 Arsip Srikandi</span></label>
+              </div>
+            </div>
+          </div>
+          <div id="panelSODA">
+            <div class="form-row">
+              <div class="form-group full">
+                <label>Dokumen <span style="color:#EBA1B4;font-size:11px;font-weight:500;text-transform:none;">(ketik untuk mencari dari Daftar Surat Masuk)</span></label>
+                <div class="suggest-wrap">
+                  <input type="text" id="pinjamJenisSODA" placeholder="Ketik perihal surat untuk mencari..." autocomplete="off" oninput="onSearchSODA(this.value)" onfocus="onSearchSODA(this.value)">
+                  <div class="suggest-box" id="sodaSuggestBox"></div>
+                </div>
+                <div id="sodaSelectedInfo" style="display:none;margin-top:6px;padding:8px 12px;background:#fff7f9;border:1px solid #F3BAC9;border-radius:8px;font-size:12px;color:#C4607A;">
+                  <span id="sodaSelectedText"></span>
+                  <button type="button" onclick="clearSODASelection()" style="margin-left:8px;background:none;border:none;color:#be123c;cursor:pointer;font-size:13px;font-weight:700;">×</button>
+                </div>
+                <input type="hidden" id="pinjamNoAgendaSODA">
+                <input type="hidden" id="pinjamPindaianNamaSODA">
+                <input type="hidden" id="pinjamPindaianUrlSODA">
+              </div>
+            </div>
+          </div>
+          <div id="panelSODAKeluar" style="display:none;">
+            <div class="form-row">
+              <div class="form-group full">
+                <label>Dokumen <span style="color:#EBA1B4;font-size:11px;font-weight:500;text-transform:none;">(ketik untuk mencari dari Daftar Surat Keluar)</span></label>
+                <div class="suggest-wrap">
+                  <input type="text" id="pinjamJenisSODAKeluar" placeholder="Ketik perihal surat keluar untuk mencari..." autocomplete="off" oninput="onSearchSODAKeluar(this.value)" onfocus="onSearchSODAKeluar(this.value)">
+                  <div class="suggest-box" id="sodaKeluarSuggestBox"></div>
+                </div>
+                <div id="sodaKeluarSelectedInfo" style="display:none;margin-top:6px;padding:8px 12px;background:#fff7f9;border:1px solid #F3BAC9;border-radius:8px;font-size:12px;color:#C4607A;">
+                  <span id="sodaKeluarSelectedText"></span>
+                  <button type="button" onclick="clearSODAKeluarSelection()" style="margin-left:8px;background:none;border:none;color:#be123c;cursor:pointer;font-size:13px;font-weight:700;">×</button>
+                </div>
+                <input type="hidden" id="pinjamNomorSODAKeluar">
+                <input type="hidden" id="pinjamPindaianNamaSODAKeluar">
+                <input type="hidden" id="pinjamPindaianUrlSODAKeluar">
+              </div>
+            </div>
+          </div>
+          <div id="panelSrikandi" style="display:none;">
+            <div class="form-row">
+              <div class="form-group full">
+                <label>Dokumen <span style="color:#9ca3af;font-size:11px;font-weight:500;text-transform:none;">(ketik manual nama dokumen)</span></label>
+                <div class="auto-wrap">
+                  <input type="text" id="pinjamJenisSrikandi" placeholder="Ketik nama dokumen Arsip Srikandi..." autocomplete="off" oninput="renderAutoAski('pinjamJenisSrikandi', askiAutoListPinjam.jenis)">
+                  <div class="auto-suggestion-box" id="pinjamJenisSrikandi_sug"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Jumlah</label><div class="auto-wrap"><input type="text" id="pinjamJumlah" placeholder="Ketik jumlah..." autocomplete="off" oninput="renderAutoAski('pinjamJumlah', askiAutoListPinjam.jumlah)"><div class="auto-suggestion-box" id="pinjamJumlah_sug"></div></div></div>
+            <div class="form-group"><label>Peminjam</label><div class="auto-wrap"><input type="text" id="pinjamPemohon" placeholder="Ketik nama peminjam..." autocomplete="off" oninput="renderAutoAski('pinjamPemohon', askiAutoListPinjam.pemohon)"><div class="auto-suggestion-box" id="pinjamPemohon_sug"></div></div></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Asal Instansi</label><div class="auto-wrap"><input type="text" id="pinjamInstansi" placeholder="Ketik asal instansi..." autocomplete="off" oninput="renderAutoAski('pinjamInstansi', askiAutoListPinjam.instansi)"><div class="auto-suggestion-box" id="pinjamInstansi_sug"></div></div></div>
+            <div class="form-group"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tanggal Pinjam</label>
+              <div class="date-field">
+                <input type="text" id="pinjamTglPinjam" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)">
+                <button type="button" class="date-pick-btn" onclick="openTanggalPicker('pinjamTglPinjam')">&#128197;</button>
+                <input type="date" id="pinjamTglPinjamPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('pinjamTglPinjam')" onfocus="syncTanggalPicker('pinjamTglPinjam')" onchange="setTanggalDariPicker('pinjamTglPinjam', this.value)">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tanggal Kembali <span style="color:#9ca3af;font-size:10px;font-weight:400;text-transform:none;">(isi saat arsip dikembalikan)</span></label>
+              <div class="date-field">
+                <input type="text" id="pinjamTglKembali" placeholder="dd/mm/yyyy (bisa dikosongkan)" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)">
+                <button type="button" class="date-pick-btn" onclick="openTanggalPicker('pinjamTglKembali')">&#128197;</button>
+                <input type="date" id="pinjamTglKembaliPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('pinjamTglKembali')" onfocus="syncTanggalPicker('pinjamTglKembali')" onchange="setTanggalDariPicker('pinjamTglKembali', this.value)">
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Pindaian Surat</label>
+              <div id="pindaianSODAInfo" style="display:none;padding:10px 14px;background:#fff7f9;border:1px solid #F3BAC9;border-radius:8px;font-size:12px;color:#374151;"></div>
+              <div id="pindaianUploadWrap">
+                <input type="file" id="pinjamInputPindaian" accept=".pdf,.doc,.docx" style="display:none" onchange="pinjamHandlePindaianSelect(event)">
+                <div class="upload-box" id="pinjamUploadPindaianBox" onclick="document.getElementById('pinjamInputPindaian').click()" style="width:100%;min-height:60px;">
+                  <div class="plus" style="font-size:20px;">+</div><div class="upload-text" style="font-size:12px;">Unggah Pindaian</div><div class="file-hint file-hint-def" style="font-size:11px;">PDF / Word</div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+              <button class="btn-primary" onclick="simpanPinjamArsip()" id="btnSimpanPinjam" style="align-self:flex-end;margin-top:auto;">Simpan</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" id="pinjamDaftarPanel" style="display:none;padding:0">
+          <div class="table-toolbar">
+            <div style="font-size:13px;color:#6b7280;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              Tampilkan baris:
+              <select id="pinjamRowsPerPage" onchange="pinjamUbahRows()"><option value="5" selected>5</option><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="-1">Semua</option></select>
+              Tahun: <select id="pinjamFilterTahun" onchange="pinjamFilterTable()"><option value="">Semua</option></select>
+              Status:
+              <select id="pinjamFilterStatus" onchange="pinjamFilterTable()"><option value="">Semua</option><option value="Aktif">Aktif</option><option value="Selesai">Selesai</option></select>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button type="button" class="btn-secondary no-print" id="btnToggleTglPinjam" onclick="toggleTglInputPinjam()" style="padding:7px 14px;font-size:12px;">👁 Tgl Input</button>
+              <button type="button" class="btn-secondary no-print" onclick="generatePdfPinjam()" style="padding:7px 14px;font-size:12px;">🖨️ PDF</button>
+              <div id="pinjamPaginationInfo" style="font-size:13px;color:#9ca3af;font-weight:500;"></div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table-pinjam" style="min-width:1300px;">
+              <colgroup><col style="width:40px"><col style="width:95px" class="col-tgl-input"><col style="width:80px"><col style="width:210px"><col style="width:70px"><col style="width:130px"><col style="width:120px"><col style="width:100px"><col style="width:100px"><col style="width:90px"><col style="width:90px"><col style="width:60px"><col style="width:60px"></colgroup>
+              <thead>
+                <tr><th>No</th><th class="col-tgl-input">Tgl Input</th><th>Sumber</th><th>Dokumen</th><th>Jumlah</th><th>Peminjam</th><th>Asal Instansi</th><th>Tgl Pinjam</th><th>Tgl Kembali</th><th>Status</th><th>Pindaian</th><th class="no-print">Edit</th><th class="no-print">Hapus</th></tr>
+                <tr class="filter-row no-print">
+                  <td></td><td class="col-tgl-input"><input type="text" id="pfTglInput" placeholder="Cari..." oninput="pinjamFilterTable()"></td><td><input type="text" id="pfSumber" placeholder="Cari..." oninput="pinjamFilterTable()"></td><td><input type="text" id="pfJenis" placeholder="Cari Dokumen..." oninput="pinjamFilterTable()"></td><td><input type="text" id="pfJumlah" placeholder="Cari..." oninput="pinjamFilterTable()"></td><td><input type="text" id="pfPemohon" placeholder="Cari Peminjam..." oninput="pinjamFilterTable()"></td><td><input type="text" id="pfInstansi" placeholder="Cari Instansi..." oninput="pinjamFilterTable()"></td><td><input type="text" id="pfTglPinjam" placeholder="Cari..." oninput="pinjamFilterTable()"></td><td><input type="text" id="pfTglKembali" placeholder="Cari..." oninput="pinjamFilterTable()"></td><td></td><td></td><td></td><td></td>
+                </tr>
+              </thead>
+              <tbody id="pinjamTableBody"><tr><td colspan="13" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pagination-wrap no-print" id="pinjamPaginationControls"></div>
+        </div>
+      </div><!-- /askiPinjamPanel -->
+
+      <!-- Alih Media -->
+      <div id="askiAlihPanel" style="display:none">
+        <div class="sppd-actions">
+          <button type="button" class="btn-secondary active" id="btnAlihForm" onclick="showAlihMode('form')">FORM PENGISIAN</button>
+          <button type="button" class="btn-secondary" id="btnAlihDaftar" onclick="showAlihMode('daftar')">DAFTAR ARSIP ALIH MEDIA</button>
+        </div>
+        <div class="card" id="alihFormPanel">
+          <h2>Form Pengisian Alih Media</h2>
+          <div class="form-row"><div class="form-group full"><label>Dokumen Arsip</label><textarea class="uraian" id="alihJenis" rows="4" placeholder="Ketik nama dokumen arsip di sini"></textarea></div></div>
+          <div class="form-row">
+            <div class="form-group"><label>Arsip Awal</label><div class="auto-wrap"><input type="text" id="alihMediaSemula" placeholder="Contoh: Tekstual (Kertas)" autocomplete="off" oninput="renderAutoAski('alihMediaSemula', askiAutoListAlih.mediaSemula)"><div class="auto-suggestion-box" id="alihMediaSemula_sug"></div></div></div>
+            <div class="form-group"><label>Arsip Akhir</label><div class="auto-wrap"><input type="text" id="alihMediaMenjadi" placeholder="Contoh: Digital PDF" autocomplete="off" oninput="renderAutoAski('alihMediaMenjadi', askiAutoListAlih.mediaMenjadi)"><div class="auto-suggestion-box" id="alihMediaMenjadi_sug"></div></div></div>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group"><label>Jumlah</label><div class="auto-wrap"><input type="text" id="alihJumlah" placeholder="Jumlah arsip..." autocomplete="off" oninput="renderAutoAski('alihJumlah', askiAutoListAlih.jumlah)"><div class="auto-suggestion-box" id="alihJumlah_sug"></div></div></div>
+            <div class="form-group"><label>Alat</label><div class="auto-wrap"><input type="text" id="alihAlat" placeholder="Alat pengubah media..." autocomplete="off" oninput="renderAutoAski('alihAlat', askiAutoListAlih.alat)"><div class="auto-suggestion-box" id="alihAlat_sug"></div></div></div>
+            <div class="form-group"><label>Waktu</label><div class="auto-wrap"><input type="text" id="alihWaktu" placeholder="Contoh: 2025..." autocomplete="off" oninput="renderAutoAski('alihWaktu', askiAutoListAlih.waktu)"><div class="auto-suggestion-box" id="alihWaktu_sug"></div></div></div>
+          </div>
+          <div class="form-row"><div class="form-group full"><label>Keterangan</label><div class="auto-wrap"><input type="text" id="alihKeterangan" placeholder="Keterangan tambahan..." autocomplete="off" oninput="renderAutoAski('alihKeterangan', askiAutoListAlih.keterangan)"><div class="auto-suggestion-box" id="alihKeterangan_sug"></div></div></div></div>
+          <button class="btn-primary" onclick="simpanAlihMedia()" id="btnSimpanAlih">Simpan</button>
+        </div>
+        <div class="card" id="alihDaftarPanel" style="display:none;padding:0">
+          <div class="table-toolbar">
+            <div style="font-size:13px;color:#6b7280;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              Tampilkan baris: <select id="alihRowsPerPage" onchange="alihUbahRows()"><option value="5" selected>5</option><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="-1">Semua</option></select>
+              Tahun: <select id="alihFilterTahun" onchange="alihFilterTable()"><option value="">Semua</option></select>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button type="button" class="btn-secondary no-print" id="btnToggleTglAlih" onclick="toggleTglInputAlih()" style="padding:7px 14px;font-size:12px;">👁 Tgl Input</button>
+              <button type="button" class="btn-secondary no-print" onclick="generatePdfAlih()" style="padding:7px 14px;font-size:12px;">🖨️ PDF</button>
+              <div id="alihPaginationInfo" style="font-size:13px;color:#9ca3af;font-weight:500;"></div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table-alih">
+              <colgroup><col style="width:44px"><col style="width:95px" class="col-tgl-input"><col style="width:110px"><col style="width:200px"><col style="width:120px"><col style="width:120px"><col style="width:65px"><col style="width:100px"><col style="width:95px"><col style="width:150px"><col style="width:60px"><col style="width:60px"></colgroup>
+              <thead>
+                <tr><th>No</th><th class="col-tgl-input">Tgl Input</th><th>Sumber</th><th>Dokumen Arsip</th><th>Arsip Awal</th><th>Arsip Akhir</th><th>Jumlah</th><th>Alat</th><th>Waktu</th><th>Keterangan</th><th class="no-print">Edit</th><th class="no-print">Hapus</th></tr>
+                <tr class="filter-row no-print">
+                  <td></td><td class="col-tgl-input"><input type="text" id="afTglInput" placeholder="Cari..." oninput="alihFilterTable()"></td><td><input type="text" id="afSumber" placeholder="Cari..." oninput="alihFilterTable()"></td><td><input type="text" id="afJenis" placeholder="Cari..." oninput="alihFilterTable()"></td><td><input type="text" id="afMediaSemula" placeholder="Cari..." oninput="alihFilterTable()"></td><td><input type="text" id="afMediaMenjadi" placeholder="Cari..." oninput="alihFilterTable()"></td><td><input type="text" id="afJumlah" placeholder="Cari..." oninput="alihFilterTable()"></td><td><input type="text" id="afAlat" placeholder="Cari..." oninput="alihFilterTable()"></td><td><input type="text" id="afWaktu" placeholder="Cari..." oninput="alihFilterTable()"></td><td><input type="text" id="afKeterangan" placeholder="Cari..." oninput="alihFilterTable()"></td><td></td><td></td>
+                </tr>
+              </thead>
+              <tbody id="alihTableBody"><tr><td colspan="11" class="empty-state">Memuat data...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pagination-wrap no-print" id="alihPaginationControls"></div>
+        </div>
+      </div><!-- /askiAlihPanel -->
+    </div><!-- /tab-aski -->
+
+  </div><!-- /content -->
+</div><!-- /appPage -->
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ MODALS ═══ -->
+<!-- Modal Tambah Klasifikasi -->
+<div id="modalTambah"><div class="modal-tambah-card"><button class="btn-close-modal" onclick="closeModalTambah()">×</button><h3>Tambah Klasifikasi Baru</h3><input type="text" id="modalKode" placeholder="Kode surat" onkeydown="if(event.key==='Enter') document.getElementById('modalNama').focus()"><input type="text" id="modalNama" placeholder="Nama klasifikasi" onkeydown="if(event.key==='Enter') submitTambahKlasifikasi()"><div class="modal-tambah-actions"><button onclick="closeModalTambah()" class="btn-modal-cancel">Batal</button><button onclick="submitTambahKlasifikasi()" class="btn-primary" style="width:auto;margin-top:0">Simpan</button></div></div></div>
+<!-- Modal Hapus Surat Keluar -->
+<div id="modalHapus" class="modal-overlay"><div class="modal-card"><div class="modal-icon">🗑️</div><div class="modal-title">Hapus Data Surat?</div><div class="modal-text">Data surat keluar ini akan dihapus dari aplikasi. Yakin?</div><div class="modal-actions"><button type="button" class="btn-modal-cancel" onclick="closeModalHapus()">Batal</button><button type="button" class="btn-modal-delete" onclick="confirmHapusData()">Ya, Hapus</button></div></div></div>
+<!-- Modal Hapus Surat Masuk -->
+<div id="modalHapusMasuk" class="modal-overlay"><div class="modal-card"><div class="modal-icon">🗑️</div><div class="modal-title">Hapus Data Surat Masuk?</div><div class="modal-text">Data surat masuk ini akan dihapus dari aplikasi. Yakin?</div><div class="modal-actions"><button type="button" class="btn-modal-cancel" onclick="closeMHapus()">Batal</button><button type="button" class="btn-modal-delete" onclick="confirmHapusMasuk()">Ya, Hapus</button></div></div></div>
+<!-- Modal Edit Surat Masuk -->
+<div id="modalEditMasuk" class="modal-edit-overlay"><div class="modal-edit-card"><h3>✏️ Edit Surat Masuk</h3><div class="form-row-3"><div class="form-group"><label>No Agenda</label><input type="text" id="emNoAgenda" readonly></div><div class="form-group"><label>Nomor Surat</label><input type="text" id="emNomorSurat" placeholder="Nomor surat"></div><div class="form-group"><label>Klasifikasi</label><input type="text" id="emKlasifikasi" placeholder="Contoh: 000 – UMUM"></div></div><div class="form-group" style="margin-bottom:14px"><label>Perihal</label><textarea id="emUraian" rows="3" placeholder="Tuliskan perihal surat di sini..."></textarea></div><div class="form-group" style="margin-bottom:14px"><label>Catatan</label><textarea id="emCatatan" rows="3" placeholder="Silakan menulis catatan di sini apabila diperlukan..."></textarea></div><div class="form-row-3"><div class="form-group"><label>Tanggal Surat</label><input type="text" id="emTanggalSurat" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)"></div><div class="form-group"><label>Tanggal Terima</label><input type="text" id="emTanggalTerima" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)"></div><div class="form-group"><label>Tanggal Turun</label><input type="text" id="emTanggalTurun" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)"></div></div><div class="form-row-3"><div class="form-group"><label>Disposisi</label><div class="disposisi-wrap" id="emDisposisiWrap"><div class="disposisi-display" id="emDisposisiDisplay" tabindex="0" onclick="toggleEmDisposisiDropdown()" onkeydown="if(event.key==='Enter'||event.key===' ')toggleEmDisposisiDropdown()"><span class="disposisi-placeholder" id="emDisposisiPlaceholder">Pilih disposisi...</span></div><div class="disposisi-dropdown" id="emDisposisiDropdown"><div class="disposisi-search-row"><input type="text" id="emDisposisiSearchInput" placeholder="🔍 Ketik nama untuk cari..." oninput="filterEmDisposisiOptions()" onkeydown="event.stopPropagation()"></div><div class="disposisi-options-list" id="emDisposisiOptions"></div><div class="disposisi-add-row"><input type="text" id="emDisposisiNewInput" placeholder="+ Tambah disposisi baru..." onkeydown="if(event.key==='Enter') submitTambahEmDisposisi(); event.stopPropagation();"><button onclick="submitTambahEmDisposisi()">Tambah</button></div></div></div></div><div class="form-group"><label>Pengirim</label><input type="text" id="emPengirim" placeholder="Nama pengirim"></div><div class="form-group"><label>Penerima</label><input type="text" id="emPenerima" placeholder="Nama penerima"></div></div><div class="modal-edit-actions"><button type="button" class="btn-modal-cancel" onclick="closeEditMasuk()">Batal</button><button type="button" class="btn-modal-save" id="btnSimpanEditMasuk" onclick="simpanEditMasuk()">💾 Simpan Perubahan</button></div></div></div>
+<!-- Modal Edit Surat Keluar -->
+<div id="modalEditKeluar" class="modal-edit-overlay"><div class="modal-edit-card"><h3>✏️ Edit Surat Keluar</h3><div class="form-row"><div class="form-group"><label>Nomor Surat</label><input type="text" id="ekNomorSurat" readonly></div><div class="form-group"><label>Tanggal Surat</label><input type="text" id="ekTanggal" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)"></div></div><div class="form-group" style="margin-bottom:14px"><label>Perihal Surat</label><input type="text" id="ekHal" placeholder="Perihal surat"></div><div class="form-row"><div class="form-group"><label>Pembuat Surat</label><div class="disposisi-wrap" id="ekPembuatWrap"><div class="disposisi-display" id="ekPembuatDisplay" tabindex="0" onclick="toggleEkPembuatDropdown()" onkeydown="if(event.key==='Enter'||event.key===' ')toggleEkPembuatDropdown()"><span class="disposisi-placeholder" id="ekPembuatPlaceholder">Pilih pembuat surat...</span></div><div class="disposisi-dropdown" id="ekPembuatDropdown"><div class="disposisi-search-row"><input type="text" id="ekPembuatSearchInput" placeholder="🔍 Ketik nama untuk cari..." oninput="filterEkPembuatOptions()" onkeydown="event.stopPropagation()"></div><div class="disposisi-options-list" id="ekPembuatOptions"></div><div class="disposisi-add-row"><input type="text" id="ekPembuatNewInput" placeholder="+ Tambah pembuat baru..." onkeydown="if(event.key==='Enter') submitTambahEkPembuat(); event.stopPropagation();"><button onclick="submitTambahEkPembuat()">Tambah</button></div></div></div></div><div class="form-group"><label>Tujuan Surat</label><input type="text" id="ekTujuan" placeholder="Pihak penerima surat"></div></div><div class="modal-edit-actions"><button type="button" class="btn-modal-cancel" onclick="closeEditKeluar()">Batal</button><button type="button" class="btn-modal-save" id="btnSimpanEditKeluar" onclick="simpanEditKeluar()">💾 Simpan Perubahan</button></div></div></div>
+<!-- Modal Hapus SPPD -->
+<div id="modalHapusSPPD" class="modal-overlay"><div class="modal-card"><div class="modal-icon">🗑️</div><div class="modal-title">Hapus DATA SPPD?</div><div class="modal-text">Data SPPD akan dihapus dari aplikasi. Yakin?</div><div class="modal-actions"><button type="button" class="btn-modal-cancel" onclick="closeHapusSPPD()">Batal</button><button type="button" class="btn-modal-delete" onclick="confirmHapusSPPD()">Ya, Hapus</button></div></div></div>
+<!-- Modal Edit SPPD -->
+<div id="modalEditSPPD" class="modal-edit-overlay"><div class="modal-edit-card"><h3>Edit Data SPPD</h3><div class="form-row"><div class="form-group"><label>Nama</label><input type="text" id="esppdNama"></div><div class="form-group"><label>Tanggal</label><input type="text" id="esppdTanggal" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)"></div></div><div class="form-row"><div class="form-group"><label>No. Registrasi</label><input type="text" id="esppdNoRegistrasi" readonly></div><div class="form-group"><label>Nomor</label><input type="text" id="esppdNomor"></div></div><div class="form-row"><div class="form-group"><label>Pemohon</label><input type="text" id="esppdPemohon"></div><div class="form-group"><label>Jumlah Hari</label><input type="text" id="esppdJumlahHari"></div></div><div class="form-group" style="margin-bottom:14px"><label>Tujuan Perjalanan Dinas</label><input type="text" id="esppdTujuan"></div><div class="form-group" style="margin-bottom:14px"><label>Keterangan Lain-Lain</label><textarea id="esppdKeterangan" rows="3"></textarea></div><div class="modal-edit-actions"><button type="button" class="btn-modal-cancel" onclick="closeEditSPPD()">Batal</button><button type="button" class="btn-modal-save" id="btnSimpanEditSPPD" onclick="simpanEditSPPD()">Simpan Perubahan</button></div></div></div>
+<!-- Modal Edit Pinjam Arsip -->
+<div id="modalEditPinjam" class="modal-edit-overlay"><div class="modal-edit-card" style="max-width:680px;"><h3>✏️ Edit Pinjam Arsip</h3><input type="hidden" id="epNo"><div class="form-row"><div class="form-group"><label>Sumber Arsip</label><input type="text" id="epSumberArsip" readonly style="background:#f9fafb;color:#6b7280;"></div><div class="form-group"><label>No Agenda / No Surat</label><input type="text" id="epNoAgendaSODA" readonly style="background:#f9fafb;color:#6b7280;"></div></div><div class="form-row"><div class="form-group"><label>Dokumen</label><input type="text" id="epJenis" placeholder="Nama dokumen"></div><div class="form-group"><label>Jumlah</label><input type="text" id="epJumlah" placeholder="Jumlah"></div></div><div class="form-row"><div class="form-group"><label>Peminjam</label><input type="text" id="epPemohon" placeholder="Nama peminjam"></div><div class="form-group"><label>Asal Instansi</label><input type="text" id="epInstansi" placeholder="Asal instansi"></div></div><div class="form-row"><div class="form-group"><label>Tanggal Pinjam</label><input type="text" id="epTglPinjam" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this)"></div><div class="form-group"><label>Tanggal Kembali</label><div class="date-field"><input type="text" id="epTglKembali" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" oninput="formatTanggalInput(this); _updateEpStatusPreview(this.value)"><button type="button" class="date-pick-btn" onclick="openTanggalPicker('epTglKembali')">&#128197;</button><input type="date" id="epTglKembaliPicker" class="date-picker-hidden" onmousedown="syncTanggalPicker('epTglKembali')" onfocus="syncTanggalPicker('epTglKembali')" onchange="setTanggalDariPicker('epTglKembali', this.value); _updateEpStatusPreview(document.getElementById('epTglKembali').value)"></div></div></div><div class="form-row"><div class="form-group"><label>Status Peminjaman</label><div id="epStatusPreview" style="padding:10px 14px;border-radius:8px;font-size:14px;font-weight:700;border:1.5px solid #e5e7eb;min-height:42px;display:flex;align-items:center;gap:8px;"><span id="epStatusText">-</span></div></div><div class="form-group"><label>Pindaian</label><div id="epPindaianInfo" style="font-size:12px;color:#6b7280;margin-bottom:4px;"></div><input type="file" id="epInputPindaian" accept=".pdf,.doc,.docx" style="display:none" onchange="epHandlePindaianSelect(event)"><div id="epPindaianBox" onclick="document.getElementById('epInputPindaian').click()" style="cursor:pointer;padding:8px 12px;border:1.5px dashed #F3BAC9;border-radius:8px;font-size:12px;color:#C4607A;font-weight:600;text-align:center;">+ Ganti Pindaian</div><div id="epPindaianSelected" style="display:none;font-size:12px;color:#374151;margin-top:4px;"></div><input type="hidden" id="epPindaianNama"><input type="hidden" id="epPindaianUrl"></div></div><div class="modal-edit-actions"><button type="button" class="btn-modal-cancel" onclick="closeEditPinjam()">Batal</button><button type="button" class="btn-modal-save" id="btnSimpanEditPinjam" onclick="simpanEditPinjam()">💾 Simpan Perubahan</button></div></div></div>
+<!-- Modal Edit Alih Media -->
+<div id="modalEditAlih" class="modal-edit-overlay"><div class="modal-edit-card" style="max-width:760px"><h3>✏️ Edit Alih Media</h3><input type="hidden" id="eaNo"><div class="form-row"><div class="form-group full"><label>Jenis / Series Arsip</label><textarea id="eaJenis" rows="4" style="width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;resize:vertical;line-height:1.5;"></textarea></div></div><div class="form-row"><div class="form-group"><label>Media Arsip Semula</label><input type="text" id="eaMediaSemula"></div><div class="form-group"><label>Media Arsip Menjadi</label><input type="text" id="eaMediaMenjadi"></div></div><div class="form-row-3"><div class="form-group"><label>Jumlah</label><input type="text" id="eaJumlah"></div><div class="form-group"><label>Alat</label><input type="text" id="eaAlat"></div><div class="form-group"><label>Waktu</label><input type="text" id="eaWaktu"></div></div><div class="form-group" style="margin-bottom:14px"><label>Keterangan</label><input type="text" id="eaKeterangan"></div><div class="modal-edit-actions"><button type="button" class="btn-modal-cancel" onclick="closeEditAlih()">Batal</button><button type="button" class="btn-modal-save" id="btnSimpanEditAlih" onclick="simpanEditAlih()">💾 Simpan Perubahan</button></div></div></div>
+<!-- Modal Hapus Pinjam -->
+<div id="modalHapusPinjam" class="modal-overlay"><div class="modal-card"><div class="modal-icon">🗑️</div><div class="modal-title">Hapus Data Pinjam Arsip?</div><div class="modal-text">Data ini akan dihapus dari aplikasi. Yakin?</div><div class="modal-actions"><button type="button" class="btn-modal-cancel" onclick="closeHapusPinjam()">Batal</button><button type="button" class="btn-modal-delete" onclick="confirmHapusPinjam()">Ya, Hapus</button></div></div></div>
+<!-- Modal Hapus Alih Media -->
+<div id="modalHapusAlih" class="modal-overlay"><div class="modal-card"><div class="modal-icon">🗑️</div><div class="modal-title">Hapus Data Alih Media?</div><div class="modal-text">Data ini akan dihapus dari aplikasi. Yakin?</div><div class="modal-actions"><button type="button" class="btn-modal-cancel" onclick="closeHapusAlih()">Batal</button><button type="button" class="btn-modal-delete" onclick="confirmHapusAlih()">Ya, Hapus</button></div></div></div>
+<!-- Modal Ganti Kata Sandi -->
+<div id="modalGantiSandi" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:1000;align-items:center;justify-content:center;"><div style="background:white;border-radius:16px;padding:28px 28px 24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(196,96,122,0.2);"><div style="font-size:16px;font-weight:800;color:#C4607A;margin-bottom:4px;">🔑 Ganti Kata Sandi</div><div style="font-size:12px;color:#9ca3af;margin-bottom:20px;">Masukkan kata sandi baru untuk akun Anda</div><div id="gantiSandiError" style="display:none;background:#fdf2f4;color:#C4607A;border:1px solid #F3BAC9;border-radius:8px;padding:9px 13px;font-size:12px;margin-bottom:14px;"></div><div id="gantiSandiSuccess" style="display:none;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:8px;padding:9px 13px;font-size:12px;margin-bottom:14px;"></div><label style="font-size:11px;font-weight:600;color:#6b7280;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.4px;">Kata Sandi Baru</label><input type="password" id="inputSandiBaru" placeholder="Masukkan kata sandi baru" style="width:100%;padding:10px 13px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;color:#111827;margin-bottom:18px;transition:border 0.2s;" onfocus="this.style.borderColor='#EBA1B4'" onblur="this.style.borderColor='#e5e7eb'" onkeydown="if(event.key==='Enter') simpanGantiSandi()"><div style="display:flex;gap:10px;"><button onclick="tutupGantiSandi()" style="flex:1;padding:10px;background:white;color:#6b7280;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Batal</button><button id="btnSimpanSandi" onclick="simpanGantiSandi()" style="flex:1;padding:10px;background:#EBA1B4;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Simpan</button></div></div></div>
+<!-- Notif Kuesioner -->
+<div id="notifKuesioner" style="position:fixed;bottom:28px;left:-320px;z-index:9998;transition:left 0.6s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;"><a href="https://docs.google.com/forms/d/e/1FAIpQLSc-smb4ovU5oSec69sINAEA13x2YquRG1q5UatCMXGZ7lWrYQ/viewform?usp=dialog" target="_blank" rel="noopener" id="notifKuesionerLink" style="display:flex;align-items:center;gap:10px;background:white;border:1.5px solid #F3BAC9;border-radius:20px;padding:10px 18px 10px 14px;text-decoration:none;box-shadow:0 4px 20px rgba(196,96,122,0.15);pointer-events:auto;transition:box-shadow 0.2s,transform 0.2s;" onmouseover="this.style.boxShadow='0 6px 24px rgba(196,96,122,0.28)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='0 4px 20px rgba(196,96,122,0.15)';this.style.transform=''"><span style="position:relative;width:8px;height:8px;flex-shrink:0;"><span style="position:absolute;inset:0;background:#EBA1B4;border-radius:50%;animation:pingKuesioner 1.4s ease-in-out infinite;opacity:0.6;"></span><span style="position:absolute;inset:0;background:#EBA1B4;border-radius:50%;"></span></span><span style="font-size:13px;font-weight:600;color:#C4607A;white-space:nowrap;letter-spacing:0.1px;">Isi Kuesioner</span><span style="font-size:11px;color:#EBA1B4;margin-left:2px;">↗</span><button id="btnTutupKuesioner" type="button" onclick="tutupNotifKuesioner(event)" style="margin-left:4px;background:none;border:none;color:#d1a0b0;cursor:pointer;font-size:15px;font-weight:700;line-height:1;padding:0;transition:color 0.15s;" onmouseover="this.style.color='#C4607A'" onmouseout="this.style.color='#d1a0b0'">×</button></a></div>
+
+<!-- ═══ LOAD JS ═══ -->
+<script src="/app.js"></script>
+
+<!-- Sembunyikan loading screen setelah JS dimuat -->
+<script>
+  // Setelah semua resource siap, sembunyikan loading screen
+  window.addEventListener('load', function() {
+    const ls = document.getElementById('appLoadingScreen');
+    if (!ls) return;
+    // Tampilkan login / app sesuai session
+    if (sessionStorage.getItem('loggedIn') === '1') {
+      document.getElementById('appPage').style.display = 'block';
+    } else {
+      document.getElementById('loginPage').style.display = 'flex';
+    }
+    // Fade out loading screen
+    ls.style.transition = 'opacity 0.4s ease';
+    ls.style.opacity = '0';
+    setTimeout(() => ls.remove(), 400);
+  });
+</script>
+</body>
+</html>
