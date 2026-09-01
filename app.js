@@ -44,7 +44,7 @@ async function _gasPostLarge(action, params = {}) {
   const body = JSON.stringify({ action, ...params });
   // GAS menerima POST tapi tidak kirim CORS header ke browser.
   // Trik: kirim dengan mode 'no-cors', lalu fetch ulang hasilnya via GET
-  // Alternatif: simpan payload ke sessionStorage, trigger GET
+  // Alternatif: simpan payload ke localStorage, trigger GET
   // Solusi terbaik untuk file upload: kirim chunk per chunk via GET
   const CHUNK = 6000;
   const chunks = [];
@@ -235,7 +235,7 @@ let _currentUsername = '';
 // AKSES KONTROL
 // ═══════════════════════════════════════════════
 function getAkses() {
-  const raw = sessionStorage.getItem('aksesUser') || 'semua';
+  const raw = localStorage.getItem('aksesUser') || 'semua';
   if (raw === 'semua') return ['masuk','keluar','sppd','aski'];
   return raw.split(',').map(x => x.trim()).filter(Boolean);
 }
@@ -260,11 +260,11 @@ function applyAksesUI() {
 // AUTH
 // ═══════════════════════════════════════════════
 (function() {
-  if (sessionStorage.getItem('loggedIn') === '1') {
+  if (localStorage.getItem('loggedIn') === '1') {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('appPage').style.display   = 'block';
     loadAppData();
-    _setProfilUI(sessionStorage.getItem('namaUser') || '', sessionStorage.getItem('usernameUser') || '');
+    _setProfilUI(localStorage.getItem('namaUser') || '', localStorage.getItem('usernameUser') || '');
   }
 })();
 
@@ -282,10 +282,10 @@ async function doLogin() {
     const res = await gasPost('checkLogin', { username: u, password: p });
     clearInterval(iv); btn.disabled = false; btn.textContent = 'Masuk';
     if (res.ok) {
-      sessionStorage.setItem('loggedIn', '1');
-      sessionStorage.setItem('namaUser', res.nama || u);
-      sessionStorage.setItem('aksesUser', res.akses || 'semua');
-      sessionStorage.setItem('usernameUser', u);
+      localStorage.setItem('loggedIn', '1');
+      localStorage.setItem('namaUser', res.nama || u);
+      localStorage.setItem('aksesUser', res.akses || 'semua');
+      localStorage.setItem('usernameUser', u);
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('appPage').style.display   = 'block';
       loadAppData();
@@ -302,7 +302,7 @@ async function doLogin() {
 }
 
 function doLogout() {
-  sessionStorage.clear();
+  localStorage.clear();
   document.getElementById('appPage').style.display   = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('inputUsername').value = '';
@@ -382,7 +382,7 @@ function initDashDate() {
   if (el) el.textContent = days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
   const jam = d.getHours();
   const salam = jam >= 4 && jam < 11 ? 'Selamat Pagi' : jam < 15 ? 'Selamat Siang' : jam < 19 ? 'Selamat Sore' : 'Selamat Malam';
-  const nama = sessionStorage.getItem('namaUser') || '';
+  const nama = localStorage.getItem('namaUser') || '';
   const salamEl = document.getElementById('salamWaktu');
   if (salamEl) salamEl.textContent = salam + (nama ? ', ' + nama + '! 👋' : '! 👋');
 }
