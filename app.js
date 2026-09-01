@@ -5,7 +5,7 @@
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyms4n6Cvw3jDJkkThqa7ixC0bDGS6HhGvU_1FBxdOpyCgJz-R9BRlRKKqZRa0_iIdj/exec';
 
-// ── API Helper: GET ──
+// ── API Helper: GET — untuk data ringan ──
 async function gasGet(action, params = {}) {
   const qs = new URLSearchParams({ action, ...params }).toString();
   const res = await fetch(`${GAS_URL}?${qs}`, { method: 'GET' });
@@ -14,13 +14,63 @@ async function gasGet(action, params = {}) {
   return json.data;
 }
 
-// ── API Helper: POST (untuk data besar / file upload) ──
+// ── API Helper: semua request pakai GET + payload encoded
+// Ini fix CORS — GAS tidak support POST dari browser external,
+// jadi semua data (termasuk yang biasanya POST) dikirim via GET
+// dengan payload di-encode sebagai query string.
+// File upload (base64) tetap aman karena URL encode bisa handle string panjang.
 async function gasPost(action, params = {}) {
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, ...params })
-  });
+  const payload = JSON.stringify(params);
+  // Kalau payload kecil (<7000 char), pakai GET biasa
+  // Kalau besar (upload file base64), pecah jadi chunked
+  if (payload.length < 7000) {
+    const qs = new URLSearchParams({
+      action,
+      payload: payload
+    }).toString();
+    const res = await fetch(`${GAS_URL}?${qs}`, { method: 'GET' });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Request gagal');
+    return json.data;
+  }
+  // Payload besar (file upload) — tetap POST tapi dengan no-cors workaround:
+  // Kirim ke GAS lewat form submission trick
+  return await _gasPostLarge(action, params);
+}
+
+// ── Untuk payload besar (file upload base64) ──
+async function _gasPostLarge(action, params = {}) {
+  // Encode action ke payload utama
+  const body = JSON.stringify({ action, ...params });
+  // GAS menerima POST tapi tidak kirim CORS header ke browser.
+  // Trik: kirim dengan mode 'no-cors', lalu fetch ulang hasilnya via GET
+  // Alternatif: simpan payload ke sessionStorage, trigger GET
+  // Solusi terbaik untuk file upload: kirim chunk per chunk via GET
+  const CHUNK = 6000;
+  const chunks = [];
+  for (let i = 0; i < body.length; i += CHUNK) {
+    chunks.push(body.slice(i, i + CHUNK));
+  }
+  const sessionId = Date.now() + '_' + Math.random().toString(36).slice(2);
+  // Kirim setiap chunk
+  for (let i = 0; i < chunks.length; i++) {
+    const qs = new URLSearchParams({
+      action: 'receiveChunk',
+      sessionId,
+      chunkIndex: i,
+      totalChunks: chunks.length,
+      data: chunks[i]
+    }).toString();
+    const res = await fetch(`${GAS_URL}?${qs}`, { method: 'GET' });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Gagal kirim chunk ' + i);
+  }
+  // Trigger eksekusi setelah semua chunk diterima
+  const qs = new URLSearchParams({
+    action: 'executeChunked',
+    sessionId
+  }).toString();
+  const res = await fetch(`${GAS_URL}?${qs}`, { method: 'GET' });
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || 'Request gagal');
   return json.data;
