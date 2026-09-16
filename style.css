@@ -408,166 +408,327 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; backgr
 }
 
 /* ═══════════════════════════════════════════════
-   DARK MODE
+
+/* ═══════════════════════════════════════════════
+   DARK MODE — Token & Override
+   Default: light. Dark aktif saat data-theme="dark"
 ═══════════════════════════════════════════════ */
 
-/* Token warna light (default) */
+/* ── Token warna LIGHT (default) ── */
 :root {
-  --bg-page:      #fdf0f3;
-  --bg-card:      #ffffff;
-  --bg-header:    linear-gradient(135deg, #d4789a 0%, #EBA1B4 60%, #f0aec0 100%);
-  --bg-input:     #ffffff;
-  --bg-table-head:#EBA1B4;
-  --bg-row-hover: #fdf0f3;
-  --bg-badge:     #F6CFD7;
-  --bg-toolbar:   #fff7f9;
-  --bg-filter:    #fdf8f9;
-  --text-primary: #111827;
-  --text-second:  #374151;
-  --text-muted:   #6b7280;
-  --text-pink:    #C4607A;
-  --border-card:  #F6CFD7;
-  --border-input: #e5e7eb;
-  --border-pink:  #F3BAC9;
-  --shadow-card:  rgba(196,96,122,0.08);
+  --bg-page:       #fdf0f3;
+  --bg-card:       #ffffff;
+  --bg-input:      #ffffff;
+  --bg-row-hover:  #fdf0f3;
+  --bg-toolbar:    #fff7f9;
+  --bg-filter:     #fdf8f9;
+  --bg-badge:      #F6CFD7;
+  --bg-select:     #ffffff;
+  --text-primary:  #111827;
+  --text-second:   #374151;
+  --text-muted:    #6b7280;
+  --text-pink:     #C4607A;
+  --text-head:     #111827;
+  --text-card-title: #111827;
+  --text-desc:     #6b7280;
+  --border-card:   #F6CFD7;
+  --border-input:  #e5e7eb;
+  --border-pink:   #F3BAC9;
+  --shadow-card:   rgba(196,96,122,0.08);
 }
 
-/* Token warna dark */
+/* ── Token warna DARK ── */
 :root[data-theme="dark"] {
-  --bg-page:      #1a0f13;
-  --bg-card:      #2a1a20;
-  --bg-header:    linear-gradient(135deg, #6b2d42 0%, #8b3d55 60%, #a04d68 100%);
-  --bg-input:     #3a2530;
-  --bg-table-head:#7a3550;
-  --bg-row-hover: #3a2530;
-  --bg-badge:     #4a2535;
-  --bg-toolbar:   #321820;
-  --bg-filter:    #2e1820;
-  --text-primary: #f3e8ec;
-  --text-second:  #d4b8c2;
-  --text-muted:   #9a7585;
-  --text-pink:    #f0a0b8;
-  --border-card:  #5a2f40;
-  --border-input: #4a2f3a;
-  --border-pink:  #6a3548;
-  --shadow-card:  rgba(0,0,0,0.3);
+  --bg-page:       #1c1014;
+  --bg-card:       #2c1a20;
+  --bg-input:      #3a2530;
+  --bg-row-hover:  #3a2530;
+  --bg-toolbar:    #281520;
+  --bg-filter:     #241018;
+  --bg-badge:      #5a2f40;
+  --bg-select:     #3a2530;
+  --text-primary:  #f5e8ec;
+  --text-second:   #d8bcc6;
+  --text-muted:    #a07888;
+  --text-pink:     #f4afc3;
+  --text-head:     #f5e8ec;
+  --text-card-title: #f5e8ec;
+  --text-desc:     #c0909f;
+  --border-card:   #5a3040;
+  --border-input:  #4a3040;
+  --border-pink:   #6a3f52;
+  --shadow-card:   rgba(0,0,0,0.35);
 }
 
-/* Terapkan token ke elemen */
-:root[data-theme="dark"] body { background: var(--bg-page); color: var(--text-primary); }
-:root[data-theme="dark"] .card { background: var(--bg-card); border-color: var(--border-card); box-shadow: 0 2px 10px var(--shadow-card); }
-:root[data-theme="dark"] .header { background: var(--bg-header); }
-:root[data-theme="dark"] #appPage { background: var(--bg-page); }
+/* ── Smooth transition ── */
+body, .card, input, textarea, select, .header,
+.dropdown-list, .disposisi-dropdown, .suggest-box,
+.profil-dropdown, td, th, .table-toolbar, .pagination-wrap,
+.modal-card, .modal-edit-card, .modal-tambah-card,
+.upload-box, .badge, .pagination-btn, .btn-secondary {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
 
-/* Input & textarea */
+/* ── BASE ── */
+:root[data-theme="dark"] body          { background: var(--bg-page);  color: var(--text-primary); }
+:root[data-theme="dark"] #appPage      { background: var(--bg-page); }
+:root[data-theme="dark"] .content      { background: var(--bg-page); }
+
+/* ── HEADER ── */
+:root[data-theme="dark"] .header {
+  background: linear-gradient(135deg, #5a1f35 0%, #7a2f4a 60%, #8a3a58 100%);
+}
+
+/* ── CARD ── */
+:root[data-theme="dark"] .card {
+  background: var(--bg-card);
+  border-color: var(--border-card);
+  box-shadow: 0 2px 10px var(--shadow-card);
+}
+:root[data-theme="dark"] .card h2      { color: var(--text-primary); }
+:root[data-theme="dark"] .card:hover   { box-shadow: 0 4px 18px rgba(0,0,0,0.4); }
+
+/* ── DASHBOARD CARDS ── */
+/* Surat Masuk card */
+:root[data-theme="dark"] #cardMasuk {
+  background: #2c1a20 !important;
+  border-color: #6a3f52 !important;
+}
+/* Surat Keluar card */
+:root[data-theme="dark"] #cardKeluar {
+  background: #1a1a2e !important;
+  border-color: #3a3a6a !important;
+}
+/* SPPD card */
+:root[data-theme="dark"] #cardSPPD {
+  background: #0f2420 !important;
+  border-color: #2a5a4a !important;
+}
+/* ASKI card */
+:root[data-theme="dark"] #cardASKI {
+  background: #201a0a !important;
+  border-color: #5a4a1a !important;
+}
+/* Judul kartu (Surat Masuk, Surat Keluar, SPPD, ASKI) */
+:root[data-theme="dark"] #cardMasuk  > div[style*="font-size:15px"],
+:root[data-theme="dark"] #cardKeluar > div[style*="font-size:15px"],
+:root[data-theme="dark"] #cardSPPD  > div[style*="font-size:15px"],
+:root[data-theme="dark"] #cardASKI  > div[style*="font-size:15px"] { color: #f5e8ec !important; }
+/* Deskripsi kartu */
+:root[data-theme="dark"] #cardMasuk  > div[style*="font-size:12px"],
+:root[data-theme="dark"] #cardKeluar > div[style*="font-size:12px"],
+:root[data-theme="dark"] #cardSPPD  > div[style*="font-size:12px"],
+:root[data-theme="dark"] #cardASKI  > div[style*="font-size:12px"] { color: #c0909f !important; }
+
+/* Info bar bawah dashboard */
+:root[data-theme="dark"] #tab-dashboard > div:last-child > div {
+  background: #2c1a20 !important;
+  border-color: #5a3040 !important;
+}
+:root[data-theme="dark"] #dashDate { color: #f5e8ec !important; }
+:root[data-theme="dark"] #tab-dashboard div[style*="font-size:15px;font-weight:700;color:#111827"] {
+  color: #f5e8ec !important;
+}
+:root[data-theme="dark"] #tab-dashboard div[style*="font-size:13px;font-weight:700;color:#111827"] {
+  color: #f5e8ec !important;
+}
+
+/* Salam waktu & heading dashboard */
+:root[data-theme="dark"] #salamWaktu   { color: #f4afc3 !important; }
+:root[data-theme="dark"] #tab-dashboard h2 { color: #f5e8ec !important; }
+:root[data-theme="dark"] #tab-dashboard > div:first-child > p:last-child { color: #a07888 !important; }
+
+/* ── INPUT & TEXTAREA ── */
 :root[data-theme="dark"] input[type="text"],
 :root[data-theme="dark"] input[type="date"],
 :root[data-theme="dark"] input[type="password"],
 :root[data-theme="dark"] input[type="email"],
+:root[data-theme="dark"] textarea,
 :root[data-theme="dark"] textarea.uraian,
 :root[data-theme="dark"] .dropdown-input {
-  background: var(--bg-input);
-  border-color: var(--border-input);
-  color: var(--text-primary);
+  background: var(--bg-input) !important;
+  border-color: var(--border-input) !important;
+  color: var(--text-primary) !important;
 }
 :root[data-theme="dark"] input:focus,
-:root[data-theme="dark"] textarea.uraian:focus,
+:root[data-theme="dark"] textarea:focus,
 :root[data-theme="dark"] .dropdown-input:focus {
-  border-color: #f0a0b8;
-  box-shadow: 0 0 0 3px rgba(240,160,184,0.15);
+  border-color: #f4afc3 !important;
+  box-shadow: 0 0 0 3px rgba(244,175,195,0.15) !important;
 }
-:root[data-theme="dark"] input[readonly] { background: #2a1a20; color: var(--text-muted); }
+:root[data-theme="dark"] input[readonly],
+:root[data-theme="dark"] input.input-readonly { background: #241018 !important; color: var(--text-muted) !important; }
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder { color: #7a5060 !important; }
 
-/* Label */
-:root[data-theme="dark"] label { color: var(--text-muted); }
-:root[data-theme="dark"] .card h2 { color: var(--text-primary); }
+/* ── LABEL ── */
+:root[data-theme="dark"] label { color: var(--text-muted) !important; }
 
-/* Tabel */
-:root[data-theme="dark"] thead { background: var(--bg-table-head); }
-:root[data-theme="dark"] td { color: var(--text-second); border-color: var(--border-card); }
-:root[data-theme="dark"] tbody tr:hover { background: var(--bg-row-hover); }
-:root[data-theme="dark"] .table-wrap { border-color: var(--border-card); }
-:root[data-theme="dark"] .table-toolbar { background: var(--bg-toolbar); border-color: var(--border-pink); }
-:root[data-theme="dark"] .filter-row { background: var(--bg-filter); }
-:root[data-theme="dark"] .filter-row input { background: var(--bg-input); border-color: var(--border-pink); color: var(--text-primary); }
+/* ── SELECT ── */
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] .table-toolbar select {
+  background: var(--bg-select) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-pink) !important;
+}
 
-/* Badge & badge pink */
-:root[data-theme="dark"] .badge { background: var(--bg-badge); color: var(--text-pink); }
+/* ── TABEL ── */
+:root[data-theme="dark"] thead          { background: #7a2f4a !important; }
+:root[data-theme="dark"] th             { color: #fff !important; }
+:root[data-theme="dark"] td             { color: var(--text-second) !important; border-color: var(--border-card) !important; }
+:root[data-theme="dark"] tbody tr:hover { background: var(--bg-row-hover) !important; }
+:root[data-theme="dark"] .table-wrap    { border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .table-toolbar {
+  background: var(--bg-toolbar) !important;
+  border-color: var(--border-pink) !important;
+}
+:root[data-theme="dark"] .table-toolbar > div { color: var(--text-muted) !important; }
+:root[data-theme="dark"] .filter-row    { background: var(--bg-filter) !important; }
+:root[data-theme="dark"] .filter-row input {
+  background: var(--bg-input) !important;
+  border-color: var(--border-pink) !important;
+  color: var(--text-primary) !important;
+}
+:root[data-theme="dark"] .empty-state   { color: #5a3040 !important; }
 
-/* Dropdown klasifikasi */
-:root[data-theme="dark"] .dropdown-list { background: var(--bg-card); border-color: var(--border-input); }
-:root[data-theme="dark"] .dropdown-item { color: var(--text-second); }
-:root[data-theme="dark"] .dropdown-item:hover { background: var(--bg-row-hover); color: var(--text-pink); }
+/* ── BADGE ── */
+:root[data-theme="dark"] .badge         { background: var(--bg-badge) !important; color: var(--text-pink) !important; }
 
-/* Disposisi */
-:root[data-theme="dark"] .disposisi-display { background: var(--bg-input); border-color: var(--border-input); color: var(--text-primary); }
-:root[data-theme="dark"] .disposisi-dropdown { background: var(--bg-card); border-color: var(--border-input); }
-:root[data-theme="dark"] .disposisi-opt { color: var(--text-second); border-color: var(--border-card); }
-:root[data-theme="dark"] .disposisi-opt:hover { background: var(--bg-row-hover); }
-:root[data-theme="dark"] .disposisi-search-row { background: var(--bg-filter); border-color: var(--border-card); }
-:root[data-theme="dark"] .disposisi-search-row input { background: var(--bg-input); border-color: var(--border-input); color: var(--text-primary); }
-:root[data-theme="dark"] .disposisi-add-row { background: var(--bg-filter); border-color: var(--border-card); }
-:root[data-theme="dark"] .disposisi-add-row input { background: var(--bg-input); color: var(--text-primary); }
-:root[data-theme="dark"] .disposisi-show-more { background: var(--bg-filter); }
+/* ── DROPDOWN KLASIFIKASI ── */
+:root[data-theme="dark"] .dropdown-list {
+  background: var(--bg-card) !important;
+  border-color: var(--border-input) !important;
+}
+:root[data-theme="dark"] .dropdown-item { color: var(--text-second) !important; }
+:root[data-theme="dark"] .dropdown-item:hover { background: var(--bg-row-hover) !important; color: var(--text-pink) !important; }
 
-/* Tombol */
-:root[data-theme="dark"] .btn-secondary { background: var(--bg-card); color: var(--text-pink); border-color: var(--border-pink); }
-:root[data-theme="dark"] .btn-secondary:hover { background: var(--bg-row-hover); }
-:root[data-theme="dark"] .btn-secondary.active { background: #8b3d55; color: white; border-color: #8b3d55; }
+/* ── DISPOSISI ── */
+:root[data-theme="dark"] .disposisi-display {
+  background: var(--bg-input) !important;
+  border-color: var(--border-input) !important;
+  color: var(--text-primary) !important;
+}
+:root[data-theme="dark"] .disposisi-dropdown {
+  background: var(--bg-card) !important;
+  border-color: var(--border-input) !important;
+}
+:root[data-theme="dark"] .disposisi-opt { color: var(--text-second) !important; border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .disposisi-opt:hover { background: var(--bg-row-hover) !important; }
+:root[data-theme="dark"] .disposisi-opt.checked { background: #3a1828 !important; color: var(--text-pink) !important; }
+:root[data-theme="dark"] .disposisi-search-row { background: var(--bg-filter) !important; border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .disposisi-search-row input { background: var(--bg-input) !important; border-color: var(--border-input) !important; color: var(--text-primary) !important; }
+:root[data-theme="dark"] .disposisi-add-row { background: var(--bg-filter) !important; border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .disposisi-add-row input { background: var(--bg-input) !important; color: var(--text-primary) !important; }
+:root[data-theme="dark"] .disposisi-placeholder { color: #7a5060 !important; }
+:root[data-theme="dark"] .disposisi-show-more { background: var(--bg-filter) !important; color: var(--text-pink) !important; }
+:root[data-theme="dark"] .disposisi-tag { background: #5a2f40 !important; color: var(--text-pink) !important; }
 
-/* Pagination */
-:root[data-theme="dark"] .pagination-wrap { background: var(--bg-card); border-color: var(--border-card); }
-:root[data-theme="dark"] .pagination-btn { background: var(--bg-card); border-color: var(--border-pink); color: var(--text-pink); }
-:root[data-theme="dark"] .pagination-btn.active { background: #8b3d55; color: white; }
+/* ── TOMBOL ── */
+:root[data-theme="dark"] .btn-primary { background: #8a3a58 !important; }
+:root[data-theme="dark"] .btn-primary:hover { background: #a04a68 !important; }
+:root[data-theme="dark"] .btn-secondary {
+  background: var(--bg-card) !important;
+  color: var(--text-pink) !important;
+  border-color: var(--border-pink) !important;
+}
+:root[data-theme="dark"] .btn-secondary:hover { background: var(--bg-row-hover) !important; }
+:root[data-theme="dark"] .btn-secondary.active { background: #7a2f4a !important; color: #fff !important; border-color: #7a2f4a !important; }
+:root[data-theme="dark"] .btn-delete { background: #3a1520 !important; color: #f4afc3 !important; border-color: #5a2535 !important; }
+:root[data-theme="dark"] .btn-edit   { background: #3a1520 !important; color: #f4afc3 !important; border-color: #5a2535 !important; }
 
-/* Modal */
-:root[data-theme="dark"] .modal-card { background: var(--bg-card); border-color: var(--border-card); }
-:root[data-theme="dark"] .modal-title { color: var(--text-primary); }
-:root[data-theme="dark"] .modal-text { color: var(--text-muted); }
-:root[data-theme="dark"] .modal-edit-card { background: var(--bg-card); border-color: var(--border-card); }
-:root[data-theme="dark"] .modal-edit-card h3 { color: var(--text-pink); }
-:root[data-theme="dark"] .modal-edit-card input[type="text"],
-:root[data-theme="dark"] .modal-edit-card textarea { background: var(--bg-input); border-color: var(--border-input); color: var(--text-primary); }
-:root[data-theme="dark"] .modal-tambah-card { background: var(--bg-card); }
-:root[data-theme="dark"] .modal-tambah-card input { background: var(--bg-input); border-color: var(--border-input); color: var(--text-primary); }
-:root[data-theme="dark"] .btn-modal-cancel { background: var(--bg-input); color: var(--text-muted); border-color: var(--border-input); }
+/* ── PAGINATION ── */
+:root[data-theme="dark"] .pagination-wrap   { background: var(--bg-card) !important; border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .pagination-btn    { background: var(--bg-card) !important; border-color: var(--border-pink) !important; color: var(--text-pink) !important; }
+:root[data-theme="dark"] .pagination-btn.active { background: #7a2f4a !important; color: #fff !important; border-color: #7a2f4a !important; }
+:root[data-theme="dark"] .pagination-btn:disabled { opacity: 0.3 !important; }
+:root[data-theme="dark"] #mPaginationInfo,
+:root[data-theme="dark"] #paginationInfo,
+:root[data-theme="dark"] #sppdPaginationInfo,
+:root[data-theme="dark"] #pinjamPaginationInfo,
+:root[data-theme="dark"] #alihPaginationInfo { color: var(--text-muted) !important; }
 
-/* Upload box */
-:root[data-theme="dark"] .upload-box { background: var(--bg-row-hover); border-color: var(--border-pink); color: var(--text-pink); }
-:root[data-theme="dark"] .upload-box:hover { background: var(--bg-card); }
+/* ── MODAL ── */
+:root[data-theme="dark"] .modal-overlay    { background: rgba(0,0,0,0.6) !important; }
+:root[data-theme="dark"] .modal-card       { background: var(--bg-card) !important; border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .modal-title      { color: var(--text-primary) !important; }
+:root[data-theme="dark"] .modal-text       { color: var(--text-muted) !important; }
+:root[data-theme="dark"] .modal-edit-overlay { background: rgba(0,0,0,0.6) !important; }
+:root[data-theme="dark"] .modal-edit-card  { background: var(--bg-card) !important; border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .modal-edit-card h3 { color: var(--text-pink) !important; }
+:root[data-theme="dark"] .modal-edit-actions { border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .btn-modal-cancel { background: var(--bg-input) !important; color: var(--text-muted) !important; border-color: var(--border-input) !important; }
+:root[data-theme="dark"] #modalTambah > .modal-tambah-card { background: var(--bg-card) !important; }
+:root[data-theme="dark"] .modal-tambah-card h3 { color: var(--text-pink) !important; }
 
-/* Agenda & nomor preview */
-:root[data-theme="dark"] .agenda-preview { background: var(--bg-card); border-color: var(--border-pink); color: var(--text-pink); }
-:root[data-theme="dark"] .nomor-preview { background: var(--bg-card); border-color: var(--border-pink); color: var(--text-pink); }
+/* ── UPLOAD BOX ── */
+:root[data-theme="dark"] .upload-box { background: #241018 !important; border-color: var(--border-pink) !important; color: var(--text-pink) !important; }
+:root[data-theme="dark"] .upload-box:hover { background: var(--bg-card) !important; }
+:root[data-theme="dark"] .file-info  { color: var(--text-primary) !important; }
+:root[data-theme="dark"] .file-hint  { color: var(--text-muted) !important; }
 
-/* Suggest box */
-:root[data-theme="dark"] .suggest-box { background: var(--bg-card); border-color: var(--border-input); }
-:root[data-theme="dark"] .suggest-item { color: var(--text-second); border-color: var(--border-card); }
-:root[data-theme="dark"] .suggest-item:hover { background: var(--bg-row-hover); color: var(--text-pink); }
+/* ── DOC LINKS ── */
+:root[data-theme="dark"] .doc-link       { background: #5a2f40 !important; color: var(--text-pink) !important; }
+:root[data-theme="dark"] .doc-upload-btn { background: #241018 !important; color: var(--text-pink) !important; border-color: var(--border-pink) !important; }
+:root[data-theme="dark"] .doc-replace-btn { background: transparent !important; color: var(--text-pink) !important; border-color: var(--border-pink) !important; }
 
-/* Profil dropdown */
-:root[data-theme="dark"] .profil-dropdown { background: var(--bg-card); border-color: var(--border-pink); }
-:root[data-theme="dark"] .profil-item { color: var(--text-second); }
-:root[data-theme="dark"] .profil-item:hover { background: var(--bg-row-hover); color: var(--text-pink); }
-:root[data-theme="dark"] .profil-divider { border-color: var(--border-card); }
+/* ── PREVIEW / AGENDA / NOMOR ── */
+:root[data-theme="dark"] .agenda-preview { background: var(--bg-card) !important; border-color: var(--border-pink) !important; color: var(--text-pink) !important; }
+:root[data-theme="dark"] .nomor-preview  { background: var(--bg-card) !important; border-color: var(--border-pink) !important; color: var(--text-pink) !important; }
 
-/* Select / dropdown toolbar */
-:root[data-theme="dark"] .table-toolbar select { background: var(--bg-input); color: var(--text-primary); border-color: var(--border-pink); }
+/* ── SUGGEST BOX ── */
+:root[data-theme="dark"] .suggest-box  { background: var(--bg-card) !important; border-color: var(--border-input) !important; }
+:root[data-theme="dark"] .suggest-item { color: var(--text-second) !important; border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .suggest-item:hover,
+:root[data-theme="dark"] .suggest-item.active { background: var(--bg-row-hover) !important; color: var(--text-pink) !important; }
 
-/* Form divider */
-:root[data-theme="dark"] .form-divider { border-color: var(--border-pink); }
+/* ── AUTO SUGGESTION ── */
+:root[data-theme="dark"] .auto-suggestion-box { background: var(--bg-card) !important; border-color: var(--border-input) !important; }
+:root[data-theme="dark"] .auto-suggestion-item { color: var(--text-second) !important; border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .auto-suggestion-item:hover { background: var(--bg-row-hover) !important; color: var(--text-pink) !important; }
 
-/* Dashboard cards */
-:root[data-theme="dark"] #tab-dashboard button[id^="card"] { background: var(--bg-card) !important; }
+/* ── PROFIL DROPDOWN ── */
+:root[data-theme="dark"] .profil-dropdown { background: var(--bg-card) !important; border-color: var(--border-pink) !important; }
+:root[data-theme="dark"] .profil-item  { color: var(--text-second) !important; }
+:root[data-theme="dark"] .profil-item:hover { background: var(--bg-row-hover) !important; color: var(--text-pink) !important; }
+:root[data-theme="dark"] .profil-divider { border-color: var(--border-card) !important; }
+:root[data-theme="dark"] .profil-item.danger { color: #f47070 !important; }
 
-/* Login page */
-:root[data-theme="dark"] #loginPage { background: linear-gradient(160deg, #2a0f1a 0%, #3a1525 50%, #4a1f30 100%); }
-:root[data-theme="dark"] .login-card { background: var(--bg-card); }
-:root[data-theme="dark"] .login-card h2 { color: var(--text-pink); }
-:root[data-theme="dark"] .login-card label { color: var(--text-muted); }
-:root[data-theme="dark"] .login-card input { background: var(--bg-input); border-color: var(--border-input); color: var(--text-primary); }
+/* ── SPPD ── */
+:root[data-theme="dark"] .sppd-preview-number { background: #241018 !important; color: var(--text-muted) !important; }
 
-/* Tombol dark mode di header */
+/* ── ASKI ── */
+:root[data-theme="dark"] .aski-sub-btn { background: var(--bg-card) !important; color: var(--text-pink) !important; border-color: var(--border-pink) !important; }
+:root[data-theme="dark"] .aski-sub-btn.active { background: linear-gradient(135deg, #8a3a58, #6a2040) !important; color: white !important; }
+:root[data-theme="dark"] .aski-sub-btn.inactive { opacity: 0.4 !important; }
+
+/* ── FORM DIVIDER ── */
+:root[data-theme="dark"] .form-divider { border-color: var(--border-pink) !important; }
+:root[data-theme="dark"] hr[style*="border-top"] { border-color: var(--border-pink) !important; }
+
+/* ── LOGIN PAGE ── */
+:root[data-theme="dark"] #loginPage { background: linear-gradient(160deg, #1a0810 0%, #2a1020 50%, #3a1828 100%) !important; }
+:root[data-theme="dark"] .login-card { background: var(--bg-card) !important; }
+:root[data-theme="dark"] .login-card h2 { color: var(--text-pink) !important; }
+:root[data-theme="dark"] .login-card .subtitle { color: var(--text-muted) !important; }
+:root[data-theme="dark"] .login-card label { color: var(--text-muted) !important; }
+:root[data-theme="dark"] .login-error { background: #3a1020 !important; color: var(--text-pink) !important; border-color: var(--border-pink) !important; }
+
+/* ── REGISTER & LUPA PAGE ── */
+:root[data-theme="dark"] #registerPage { background: linear-gradient(135deg, #1a0810, #2a1020) !important; }
+:root[data-theme="dark"] #lupaPage     { background: linear-gradient(135deg, #1a0810, #2a1020) !important; }
+:root[data-theme="dark"] .register-card,
+:root[data-theme="dark"] .lupa-card    { background: var(--bg-card) !important; }
+:root[data-theme="dark"] .register-card h2,
+:root[data-theme="dark"] .lupa-card h2 { color: var(--text-pink) !important; }
+:root[data-theme="dark"] .register-card .subtitle,
+:root[data-theme="dark"] .lupa-card .subtitle { color: var(--text-muted) !important; }
+
+/* ── MODAL GANTI SANDI ── */
+:root[data-theme="dark"] #modalGantiSandi > div { background: var(--bg-card) !important; }
+:root[data-theme="dark"] #modalGantiSandi div[style*="font-size:16px"] { color: var(--text-pink) !important; }
+:root[data-theme="dark"] #modalGantiSandi div[style*="font-size:12px;color:#9ca3af"] { color: var(--text-muted) !important; }
+
+/* ── TOMBOL DARK MODE ── */
 .btn-darkmode {
   background: rgba(255,255,255,0.15);
   border: 1.5px solid rgba(255,255,255,0.4);
@@ -577,10 +738,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; backgr
   cursor: pointer; font-size: 16px;
   transition: background 0.2s;
   flex-shrink: 0;
+  line-height: 1;
 }
 .btn-darkmode:hover { background: rgba(255,255,255,0.28); }
-
-/* Smooth transition semua elemen saat ganti mode */
-*, *::before, *::after {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
