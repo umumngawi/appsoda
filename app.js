@@ -236,11 +236,30 @@ let sodaKeluarSuggestions = [];
 let sodaKeluarSelectedItem = null;
 let _currentUsername = '';
 
-// ═══════════════════════════════════════════════
-// AKSES KONTROL
-// ═══════════════════════════════════════════════
+// ── Helper: set login data ke dua storage ──
+function _setLoginStorage(key, value) {
+  try { localStorage.setItem(key, value); } catch(e) {}
+  try { sessionStorage.setItem(key, value); } catch(e) {}
+}
+function _getLoginStorage(key) {
+  // Coba localStorage dulu, fallback ke sessionStorage
+  const val = localStorage.getItem(key);
+  if (val !== null) return val;
+  // localStorage hilang (browser clear) — ambil dari sessionStorage
+  const valSS = sessionStorage.getItem(key);
+  if (valSS !== null) {
+    // Pulihkan ke localStorage
+    try { localStorage.setItem(key, valSS); } catch(e) {}
+    return valSS;
+  }
+  return null;
+}
+function _removeLoginStorage(key) {
+  try { localStorage.removeItem(key); } catch(e) {}
+  try { sessionStorage.removeItem(key); } catch(e) {}
+}
 function getAkses() {
-  const raw = localStorage.getItem('aksesUser') || 'semua';
+  const raw = _getLoginStorage('aksesUser') || 'semua';
   if (raw === 'semua') return ['masuk','keluar','sppd','aski'];
   return raw.split(',').map(x => x.trim()).filter(Boolean);
 }
@@ -265,11 +284,11 @@ function applyAksesUI() {
 // AUTH
 // ═══════════════════════════════════════════════
 (function() {
-  if (localStorage.getItem('loggedIn') === '1') {
+  if (_getLoginStorage('loggedIn') === '1') {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('appPage').style.display   = 'block';
     loadAppData();
-    _setProfilUI(localStorage.getItem('namaUser') || '', localStorage.getItem('usernameUser') || '');
+    _setProfilUI(_getLoginStorage('namaUser') || '', _getLoginStorage('usernameUser') || '');
   }
 })();
 
@@ -287,10 +306,10 @@ async function doLogin() {
     const res = await gasPost('checkLogin', { username: u, password: p });
     clearInterval(iv); btn.disabled = false; btn.textContent = 'Masuk';
     if (res.ok) {
-      localStorage.setItem('loggedIn', '1');
-      localStorage.setItem('namaUser', res.nama || u);
-      localStorage.setItem('aksesUser', res.akses || 'semua');
-      localStorage.setItem('usernameUser', u);
+      _setLoginStorage('loggedIn', '1');
+      _setLoginStorage('namaUser', res.nama || u);
+      _setLoginStorage('aksesUser', res.akses || 'semua');
+      _setLoginStorage('usernameUser', u);
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('appPage').style.display   = 'block';
       loadAppData();
@@ -309,10 +328,10 @@ async function doLogin() {
 function doLogout() {
   // Hapus hanya key yang berkaitan login — JANGAN clear() semua
   // karena akan hapus dark mode preference dll
-  localStorage.removeItem('loggedIn');
-  localStorage.removeItem('namaUser');
-  localStorage.removeItem('aksesUser');
-  localStorage.removeItem('usernameUser');
+  _removeLoginStorage('loggedIn');
+  _removeLoginStorage('namaUser');
+  _removeLoginStorage('aksesUser');
+  _removeLoginStorage('usernameUser');
   document.getElementById('appPage').style.display   = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('inputUsername').value = '';
