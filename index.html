@@ -164,9 +164,6 @@
       <img src="./icon-192.png" alt="SODA"
         style="height:60px;width:60px;border-radius:12px;flex-shrink:0;object-fit:cover;"
         onerror="this.style.display='none'">
-      <div>
-        <h1>SODA</h1>
-      </div>
     </div>
     <div class="header-right">
       <button id="btnKembali" class="btn-kembali" onclick="showTab('dashboard')">
@@ -901,18 +898,26 @@
   window.addEventListener('load', function() {
     const ls = document.getElementById('appLoadingScreen');
 
-    // Tampilkan semua konten (hilangkan visibility:hidden dari body)
+    // Tampilkan semua konten
     document.body.style.visibility = 'visible';
 
-    // Tentukan halaman mana yang tampil
-    const isLoggedIn = localStorage.getItem('loggedIn') === '1';
+    // Cek login — coba localStorage dulu, fallback ke sessionStorage
+    function getLoginVal(key) {
+      const v = localStorage.getItem(key);
+      if (v !== null) return v;
+      const vs = sessionStorage.getItem(key);
+      if (vs !== null) { try { localStorage.setItem(key, vs); } catch(e) {} return vs; }
+      return null;
+    }
+
+    const isLoggedIn = getLoginVal('loggedIn') === '1';
     if (isLoggedIn) {
       document.getElementById('appPage').style.display = 'block';
     } else {
       document.getElementById('loginPage').style.display = 'flex';
     }
 
-    // Fade out loading screen setelah halaman siap
+    // Fade out loading screen
     if (ls) {
       ls.style.transition = 'opacity 0.35s ease';
       ls.style.opacity = '0';
