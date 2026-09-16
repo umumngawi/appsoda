@@ -109,67 +109,74 @@ if ('serviceWorker' in navigator) {
       // Cek update SW setiap 60 detik
       setInterval(() => reg.update(), 60 * 1000);
 
-      // Kalau ada update SW yang menunggu
+      // Kalau ada update SW yang menunggu → langsung skip waiting, silent auto reload
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            _showUpdateBanner();
+            console.log('[SODA] Update ditemukan, auto reload...');
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
           }
         });
       });
+
+      // Kalau SW sudah aktif versi baru → reload halaman otomatis (silent)
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        console.log('[SODA] Controller baru aktif, reload...');
+        location.reload();
+      });
+
     } catch(e) {
       console.warn('[SW] Registration failed:', e);
     }
 
-    // Dengarkan pesan dari SW
+    // Dengarkan pesan dari SW (silent, tidak tampilkan banner)
     navigator.serviceWorker.addEventListener('message', event => {
       if (event.data && event.data.type === 'SW_UPDATED') {
         console.log('[SODA] SW diperbarui ke:', event.data.version);
-        _showUpdateBanner();
+        // Silent — tidak perlu reload lagi karena controllerchange sudah handle
       }
     });
   });
 }
 
-function _showUpdateBanner() {
-  // Kalau banner sudah ada, skip
-  if (document.getElementById('sodaUpdateBanner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'sodaUpdateBanner';
-  banner.style.cssText = `
-    position:fixed;bottom:0;left:0;right:0;z-index:99999;
-    background:linear-gradient(135deg,#EBA1B4,#C4607A);
-    color:white;padding:14px 20px;
-    display:flex;align-items:center;justify-content:space-between;
-    font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
-    box-shadow:0 -4px 20px rgba(196,96,122,0.3);
-    animation:slideUp 0.3s ease-out;
-  `;
-  banner.innerHTML = `
-    <span>🔄 Versi baru tersedia! Reload untuk mendapatkan update.</span>
-    <div style="display:flex;gap:10px;flex-shrink:0;">
-      <button onclick="location.reload(true)" style="
-        background:white;color:#C4607A;border:none;
-        padding:7px 16px;border-radius:20px;font-size:12px;
-        font-weight:700;cursor:pointer;">
-        Reload Sekarang
-      </button>
-      <button onclick="document.getElementById('sodaUpdateBanner').remove()" style="
-        background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4);
-        padding:7px 12px;border-radius:20px;font-size:12px;cursor:pointer;">
-        Nanti
-      </button>
-    </div>
-  `;
-  document.body.appendChild(banner);
-  // Auto-reload setelah 30 detik jika user tidak klik
-  setTimeout(() => {
-    if (document.getElementById('sodaUpdateBanner')) {
-      location.reload(true);
-    }
-  }, 30000);
+// ═══════════════════════════════════════════════
+// DARK MODE
+// ═══════════════════════════════════════════════
+function initDarkMode() {
+  // Baca preferensi dari localStorage
+  const saved = localStorage.getItem('soda_darkmode');
+  if (saved === '1') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else if (saved === '0') {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else {
+    // Ikutin preferensi sistem
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  }
+  _updateDarkModeBtn();
 }
+
+function toggleDarkMode() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('soda_darkmode', next === 'dark' ? '1' : '0');
+  _updateDarkModeBtn();
+}
+
+function _updateDarkModeBtn() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const btn = document.getElementById('btnDarkMode');
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+}
+
+// Jalankan dark mode saat halaman load
+(function() { initDarkMode(); })();
 
 // ═══════════════════════════════════════════════
 // STATE / VARIABEL GLOBAL
