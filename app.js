@@ -1,11 +1,7 @@
-// ═══════════════════════════════════════════════
-// SODA PWA — app.js
-// Ganti URL_GAS dengan URL deploy GAS kamu
-// ═══════════════════════════════════════════════
+
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyms4n6Cvw3jDJkkThqa7ixC0bDGS6HhGvU_1FBxdOpyCgJz-R9BRlRKKqZRa0_iIdj/exec';
 
-// ── API Helper: GET — untuk data ringan ──
 async function gasGet(action, params = {}) {
   const qs = new URLSearchParams({ action, ...params }).toString();
   const res = await fetch(`${GAS_URL}?${qs}`, { method: 'GET' });
@@ -14,15 +10,9 @@ async function gasGet(action, params = {}) {
   return json.data;
 }
 
-// ── API Helper: semua request pakai GET + payload encoded
-// Ini fix CORS — GAS tidak support POST dari browser external,
-// jadi semua data (termasuk yang biasanya POST) dikirim via GET
-// dengan payload di-encode sebagai query string.
-// File upload (base64) tetap aman karena URL encode bisa handle string panjang.
 async function gasPost(action, params = {}) {
   const payload = JSON.stringify(params);
-  // Kalau payload kecil (<7000 char), pakai GET biasa
-  // Kalau besar (upload file base64), pecah jadi chunked
+
   if (payload.length < 7000) {
     const qs = new URLSearchParams({
       action,
@@ -148,15 +138,13 @@ if ('serviceWorker' in navigator) {
 // ═══════════════════════════════════════════════
 function initDarkMode() {
   // Baca preferensi dari localStorage
+  // Default: light (tidak ikut sistem)
   const saved = localStorage.getItem('soda_darkmode');
   if (saved === '1') {
     document.documentElement.setAttribute('data-theme', 'dark');
-  } else if (saved === '0') {
-    document.documentElement.setAttribute('data-theme', 'light');
   } else {
-    // Ikutin preferensi sistem
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    // Default light mode — kalau belum pernah pilih, atau pilih light
+    document.documentElement.setAttribute('data-theme', 'light');
   }
   _updateDarkModeBtn();
 }
