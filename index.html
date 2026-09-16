@@ -25,13 +25,17 @@
   <!-- CSS -->
   <link rel="stylesheet" href="./style.css">
 
-  <!-- Animasi banner update -->
+  <!-- Loading screen & anti-glitch styles — inline supaya tampil SEBELUM CSS eksternal load -->
   <style>
+    /* Sembunyikan semua konten dulu sebelum siap — ini fix glitch */
+    body { visibility: hidden; }
+    /* Loading screen selalu visible */
+    #appLoadingScreen { visibility: visible; }
+
     @keyframes slideUp {
       from { transform: translateY(100%); opacity: 0; }
       to   { transform: translateY(0);   opacity: 1; }
     }
-    /* Loading screen saat pertama buka -->
     #appLoadingScreen {
       position: fixed; inset: 0; z-index: 999999;
       background: linear-gradient(160deg, #F6CFD7 0%, #F3BAC9 50%, #EBA1B4 100%);
@@ -63,6 +67,18 @@
       40%           { transform: translateY(-8px); }
     }
   </style>
+  <!-- Cek login status SESEGERA MUNGKIN sebelum render apapun -->
+  <script>
+    (function() {
+      // Apply dark mode sebelum CSS load supaya tidak flicker
+      const dm = localStorage.getItem('soda_darkmode');
+      if (dm === '1') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
 </head>
 <body>
 
@@ -880,22 +896,28 @@
 <!-- ═══ LOAD JS ═══ -->
 <script src="./app.js"></script>
 
-<!-- Sembunyikan loading screen setelah JS dimuat -->
+<!-- Init setelah JS dimuat -->
 <script>
-  // Setelah semua resource siap, sembunyikan loading screen
   window.addEventListener('load', function() {
     const ls = document.getElementById('appLoadingScreen');
-    if (!ls) return;
-    // Tampilkan login / app sesuai session
-    if (localStorage.getItem('loggedIn') === '1') {
+
+    // Tampilkan semua konten (hilangkan visibility:hidden dari body)
+    document.body.style.visibility = 'visible';
+
+    // Tentukan halaman mana yang tampil
+    const isLoggedIn = localStorage.getItem('loggedIn') === '1';
+    if (isLoggedIn) {
       document.getElementById('appPage').style.display = 'block';
     } else {
       document.getElementById('loginPage').style.display = 'flex';
     }
-    // Fade out loading screen
-    ls.style.transition = 'opacity 0.4s ease';
-    ls.style.opacity = '0';
-    setTimeout(() => ls.remove(), 400);
+
+    // Fade out loading screen setelah halaman siap
+    if (ls) {
+      ls.style.transition = 'opacity 0.35s ease';
+      ls.style.opacity = '0';
+      setTimeout(() => { if (ls.parentNode) ls.parentNode.removeChild(ls); }, 350);
+    }
   });
 </script>
 </body>
