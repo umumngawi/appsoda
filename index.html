@@ -895,22 +895,28 @@
 
 <!-- Init setelah JS dimuat -->
 <script>
+  // Helper baca cookie — sama persis dengan di app.js
+  function _getCookieInline(name) {
+    const key = name + '=';
+    const parts = document.cookie.split(';');
+    for (let i = 0; i < parts.length; i++) {
+      let c = parts[i].trim();
+      if (c.indexOf(key) === 0) return decodeURIComponent(c.substring(key.length));
+    }
+    return null;
+  }
+
   window.addEventListener('load', function() {
     const ls = document.getElementById('appLoadingScreen');
 
     // Tampilkan semua konten
     document.body.style.visibility = 'visible';
 
-    // Cek login — coba localStorage dulu, fallback ke sessionStorage
-    function getLoginVal(key) {
-      const v = localStorage.getItem(key);
-      if (v !== null) return v;
-      const vs = sessionStorage.getItem(key);
-      if (vs !== null) { try { localStorage.setItem(key, vs); } catch(e) {} return vs; }
-      return null;
-    }
+    // Cek login — cookie dulu, fallback localStorage
+    const fromCookie = _getCookieInline('soda_loggedIn');
+    const fromLS     = localStorage.getItem('loggedIn');
+    const isLoggedIn = (fromCookie === '1') || (fromLS === '1');
 
-    const isLoggedIn = getLoginVal('loggedIn') === '1';
     if (isLoggedIn) {
       document.getElementById('appPage').style.display = 'block';
     } else {
