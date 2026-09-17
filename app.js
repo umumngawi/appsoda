@@ -310,16 +310,25 @@ function applyAksesUI() {
 }
 
 // ═══════════════════════════════════════════════
-// AUTH
+// AUTH — Auto restore session saat app dibuka
 // ═══════════════════════════════════════════════
-(function() {
+window.addEventListener('DOMContentLoaded', function() {
   if (_getLoginStorage('loggedIn') === '1') {
-    document.getElementById('loginPage').style.display = 'none';
-    document.getElementById('appPage').style.display   = 'block';
+    const nama     = _getLoginStorage('namaUser')     || '';
+    const username = _getLoginStorage('usernameUser') || '';
+    const akses    = _getLoginStorage('aksesUser')    || 'semua';
+    // Pastikan aksesUser tersedia di localStorage untuk getAkses()
+    try { localStorage.setItem('aksesUser', akses); } catch(e) {}
+    // Sembunyikan login, tampilkan app
+    const loginEl = document.getElementById('loginPage');
+    const appEl   = document.getElementById('appPage');
+    if (loginEl) loginEl.style.display = 'none';
+    if (appEl)   appEl.style.display   = 'block';
+    // Set profil UI dengan data asli
+    _setProfilUI(nama, username);
     loadAppData();
-    _setProfilUI(_getLoginStorage('namaUser') || '', _getLoginStorage('usernameUser') || '');
   }
-})();
+});
 
 async function doLogin() {
   const u   = document.getElementById('inputUsername').value.trim();
@@ -440,7 +449,7 @@ function initDashDate() {
   if (el) el.textContent = days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
   const jam = d.getHours();
   const salam = jam >= 4 && jam < 11 ? 'Selamat Pagi' : jam < 15 ? 'Selamat Siang' : jam < 19 ? 'Selamat Sore' : 'Selamat Malam';
-  const nama = localStorage.getItem('namaUser') || '';
+  const nama = _getLoginStorage('namaUser') || '';
   const salamEl = document.getElementById('salamWaktu');
   if (salamEl) salamEl.textContent = salam + (nama ? ', ' + nama + '! 👋' : '! 👋');
 }
