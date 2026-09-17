@@ -236,25 +236,54 @@ let sodaKeluarSuggestions = [];
 let sodaKeluarSelectedItem = null;
 let _currentUsername = '';
 
-// ── Helper: set login data ke dua storage ──
+// ── Login Storage: pakai Cookie (tidak expire) + localStorage backup ──
+// Cookie dipilih karena survive browser restart, device mati, dll
+// tidak seperti sessionStorage yang hilang saat tab ditutup
+
+function _setCookie(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = name + '=' + encodeURIComponent(value) +
+    ';expires=' + d.toUTCString() +
+    ';path=/;SameSite=Lax';
+}
+function _getCookie(name) {
+  const key = name + '=';
+  const parts = document.cookie.split(';');
+  for (let i = 0; i < parts.length; i++) {
+    let c = parts[i].trim();
+    if (c.indexOf(key) === 0) return decodeURIComponent(c.substring(key.length));
+  }
+  return null;
+}
+function _deleteCookie(name) {
+  document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;SameSite=Lax';
+}
+
 function _setLoginStorage(key, value) {
+  // Simpan di cookie (365 hari) + localStorage sebagai backup
+  try { _setCookie('soda_' + key, value, 365); } catch(e) {}
   try { localStorage.setItem(key, value); } catch(e) {}
-  try { sessionStorage.setItem(key, value); } catch(e) {}
 }
 function _getLoginStorage(key) {
-  // Coba localStorage dulu, fallback ke sessionStorage
-  const val = localStorage.getItem(key);
-  if (val !== null) return val;
-  // localStorage hilang (browser clear) — ambil dari sessionStorage
-  const valSS = sessionStorage.getItem(key);
-  if (valSS !== null) {
-    // Pulihkan ke localStorage
-    try { localStorage.setItem(key, valSS); } catch(e) {}
-    return valSS;
+  // Prioritas: cookie → localStorage
+  const fromCookie = _getCookie('soda_' + key);
+  if (fromCookie !== null) {
+    // Sync ke localStorage juga
+    try { localStorage.setItem(key, fromCookie); } catch(e) {}
+    return fromCookie;
+  }
+  // Fallback localStorage
+  const fromLS = localStorage.getItem(key);
+  if (fromLS !== null) {
+    // Sync balik ke cookie
+    try { _setCookie('soda_' + key, fromLS, 365); } catch(e) {}
+    return fromLS;
   }
   return null;
 }
 function _removeLoginStorage(key) {
+  try { _deleteCookie('soda_' + key); } catch(e) {}
   try { localStorage.removeItem(key); } catch(e) {}
   try { sessionStorage.removeItem(key); } catch(e) {}
 }
